@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meme Generator - Admission SUPINFO</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Meme Generator</h1>
+    
+    <div class="main-container">
+        <div class="controls">
+            <div class="file-label" id="labelTrigger">Choisir une image</div>
+            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+            
+            <input type="text" id="topText" placeholder="Texte du haut">
+            <input type="text" id="bottomText" placeholder="Texte du bas">
+            
+            <div class="button-group">
+                <button id="downloadBtn" class="primary-btn">Télécharger</button>
+                <button id="shareBtn" class="share-btn">Partager</button>
+                <button id="saveBtn" class="secondary-btn">Sauvegarder en Galerie</button>
+            </div>
+        </div>
+
+        <div class="preview-area">
+            <canvas id="memeCanvas"></canvas>
+        </div>
+    </div>
+
+    <section class="gallery-section">
+        <div class="gallery-header">
+            <h2>Galerie</h2>
+            <button id="clearGallery" class="clear-btn">Effacer tout</button>
+        </div>
+        <div id="galleryContainer" class="gallery-grid"></div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>
