@@ -17,7 +17,6 @@ let fileType = 'image/png';
 // --- VARIABLES POUR LE DÉPLACEMENT (DRAG & DROP) ---
 let topPos = { x: 0, y: 0, isDragging: false };
 let bottomPos = { x: 0, y: 0, isDragging: false };
-let offset = { x: 0, y: 0 };
 
 // --- GESTION DES EMOJIS ---
 function closeEmojis() {
@@ -39,7 +38,8 @@ document.querySelectorAll('.emoji-trigger').forEach(btn => {
 document.querySelectorAll('.emoji-list span').forEach(emoji => {
     emoji.addEventListener('mousedown', (e) => {
         e.preventDefault();
-        const targetInput = emoji.closest('.emoji-list').id === 'emojiListTop' ? topText : bottomText;
+        const listId = emoji.closest('.emoji-list').id;
+        const targetInput = listId === 'emojiListTop' ? topText : bottomText;
         targetInput.value += emoji.innerText;
         drawMeme();
         targetInput.focus();
@@ -60,7 +60,7 @@ imageInput.addEventListener('change', (e) => {
         const img = new Image();
         img.onload = () => { 
             activeImage = img;
-            // Réinitialiser les positions au centre
+            // Réinitialiser les positions pour forcer le placement par défaut au prochain draw
             topPos.y = 0; 
             drawMeme(); 
         };
@@ -81,10 +81,11 @@ function getMousePos(e) {
 }
 
 canvas.addEventListener('mousedown', (e) => {
+    if (!activeImage) return;
     const pos = getMousePos(e);
     const size = parseInt(fontSizeRange.value);
 
-    // Détection simple de zone (clic près du texte)
+    // Détection de zone (clic sur le texte)
     if (Math.abs(pos.y - topPos.y) < size) {
         topPos.isDragging = true;
     } else if (Math.abs(pos.y - bottomPos.y) < size) {
@@ -113,6 +114,7 @@ window.addEventListener('mouseup', () => {
 
 // --- DESSIN DU MEME ---
 function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false) {
+    if (!text) return;
     const words = text.split(' ');
     let lines = [];
     let currentLine = '';
@@ -139,7 +141,7 @@ function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false)
 function drawMeme() {
     if (!activeImage) return;
 
-    // Mise à l'échelle
+    // Mise à l'échelle du canvas
     const minWidth = 800;
     let rW = activeImage.width;
     let rH = activeImage.height;
@@ -153,13 +155,14 @@ function drawMeme() {
     const size = parseInt(fontSizeRange.value);
     const font = fontSelect.value;
     
-    // Initialisation des positions par défaut si c'est la première fois
+    // Positions par défaut (uniquement au premier chargement de l'image)
     if (topPos.y === 0) {
-        topPos = { x: canvas.width / 2, y: 50, isDragging: false };
-        bottomPos = { x: canvas.width / 2, y: canvas.height - 50, isDragging: false };
+        topPos = { x: canvas.width / 2, y: size + 20, isDragging: false };
+        bottomPos = { x: canvas.width / 2, y: canvas.height - size, isDragging: false };
     }
 
-    ctx.font = `bold ${size}px ${font}, Impact, sans-serif`;
+    // Application de la police (avec guillemets pour les noms composés)
+    ctx.font = `bold ${size}px "${font}", Impact, sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillStyle = 'white';
     ctx.strokeStyle = 'black';
@@ -168,17 +171,22 @@ function drawMeme() {
     const maxWidth = canvas.width * 0.9;
     const lineHeight = size * 1.1;
 
-    // Rendu des textes aux positions dynamiques
     ctx.textBaseline = 'middle';
     wrapText(ctx, topText.value.toUpperCase(), topPos.x, topPos.y, maxWidth, lineHeight, false);
     wrapText(ctx, bottomText.value.toUpperCase(), bottomPos.x, bottomPos.y, maxWidth, lineHeight, true);
 }
 
-// --- ÉVÉNEMENTS ---
-[topText, bottomText, fontSizeRange, fontSelect].forEach(el => {
+// --- ÉVÉNEMENTS DE MISE À JOUR ---
+[topText, bottomText, fontSizeRange].forEach(el => {
     el.addEventListener('input', () => { if(activeImage) drawMeme(); });
 });
 
+// Événement spécifique pour le changement de police
+fontSelect.addEventListener('change', () => {
+    if(activeImage) drawMeme();
+});
+
+// --- BOUTONS ---
 downloadBtn.addEventListener('click', () => {
     if(!activeImage) return alert("Choisissez une image !");
     const link = document.createElement('a');
