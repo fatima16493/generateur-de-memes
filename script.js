@@ -12,8 +12,10 @@ const galleryContainer = document.getElementById('galleryContainer');
 
 let activeImage = null;
 
+// Déclencheur du sélecteur d'image
 document.getElementById('labelTrigger').addEventListener('click', () => imageInput.click());
 
+// Chargement de l'image
 imageInput.addEventListener('change', (e) => {
     if (!e.target.files[0]) return;
     const reader = new FileReader();
@@ -28,7 +30,7 @@ imageInput.addEventListener('change', (e) => {
     reader.readAsDataURL(e.target.files[0]);
 });
 
-// FONCTION MAGIQUE : Gère les retours à la ligne automatique
+// FONCTION POUR GÉRER LES TEXTES LONGS (Wrapping)
 function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false) {
     const words = text.split(' ');
     let line = '';
@@ -47,13 +49,14 @@ function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false)
     lines.push(line);
 
     lines.forEach((l, index) => {
-        // Si c'est le texte du bas, on remonte pour chaque ligne supplémentaire
+        // Si c'est le texte du bas, on remonte les lignes vers le haut
         let posY = fromBottom ? y - (lines.length - 1 - index) * lineHeight : y + index * lineHeight;
         context.strokeText(l.trim(), x, posY);
         context.fillText(l.trim(), x, posY);
     });
 }
 
+// DESSIN DU MÉME
 function drawMeme() {
     if (!activeImage) return;
 
@@ -68,27 +71,26 @@ function drawMeme() {
     ctx.strokeStyle = 'black';
     ctx.lineWidth = size / 6;
 
-    const maxWidth = canvas.width * 0.9; // 90% de la largeur de l'image
+    const maxWidth = canvas.width * 0.9; 
     const lineHeight = size * 1.1;
 
-    // Texte Haut
+    // Rendu Texte Haut
     ctx.textBaseline = 'top';
-    wrapText(ctx, topText.value.toUpperCase(), canvas.width / 2, 25, maxWidth, lineHeight, false);
+    wrapText(ctx, topText.value.toUpperCase(), canvas.width / 2, 20, maxWidth, lineHeight, false);
 
-    // Texte Bas
+    // Rendu Texte Bas
     ctx.textBaseline = 'bottom';
-    wrapText(ctx, bottomText.value.toUpperCase(), canvas.width / 2, canvas.height - 25, maxWidth, lineHeight, true);
+    wrapText(ctx, bottomText.value.toUpperCase(), canvas.width / 2, canvas.height - 20, maxWidth, lineHeight, true);
 }
 
-topText.addEventListener('input', drawMeme);
-bottomText.addEventListener('input', drawMeme);
-fontSizeRange.addEventListener('input', drawMeme);
+// Mise à jour en temps réel
+[topText, bottomText, fontSizeRange].forEach(el => el.addEventListener('input', drawMeme));
 
-// TELECHARGEMENT
+// TÉLÉCHARGEMENT
 downloadBtn.addEventListener('click', () => {
     if(!activeImage) return alert("Choisissez une image !");
     const link = document.createElement('a');
-    link.download = 'meme-supinfo.png';
+    link.download = 'meme-genere.png';
     link.href = canvas.toDataURL();
     link.click();
 });
@@ -102,25 +104,25 @@ shareBtn.addEventListener('click', async () => {
         if (navigator.share && navigator.canShare({ files: [file] })) {
             await navigator.share({ title: 'Mon Mème', files: [file] });
         } else {
-            alert("Partage non supporté ici. Téléchargez l'image !");
+            alert("Partage non supporté sur cet appareil. Utilisez 'Télécharger'.");
         }
-    } catch (err) { console.log("Erreur partage"); }
+    } catch (err) { console.log("Partage annulé"); }
 });
 
 // GALERIE
 saveBtn.addEventListener('click', () => {
     if(!activeImage) return;
-    const savedMemes = JSON.parse(localStorage.getItem('supinfoMemes') || '[]');
-    savedMemes.unshift(canvas.toDataURL());
-    if(savedMemes.length > 12) savedMemes.pop();
-    localStorage.setItem('supinfoMemes', JSON.stringify(savedMemes));
+    const saved = JSON.parse(localStorage.getItem('supinfoMemes') || '[]');
+    saved.unshift(canvas.toDataURL());
+    if(saved.length > 12) saved.pop();
+    localStorage.setItem('supinfoMemes', JSON.stringify(saved));
     displayGallery();
 });
 
 function displayGallery() {
-    const savedMemes = JSON.parse(localStorage.getItem('supinfoMemes') || '[]');
+    const saved = JSON.parse(localStorage.getItem('supinfoMemes') || '[]');
     galleryContainer.innerHTML = '';
-    savedMemes.forEach(meme => {
+    saved.forEach(meme => {
         const div = document.createElement('div');
         div.className = 'gallery-item';
         div.innerHTML = `<img src="${meme}">`;
