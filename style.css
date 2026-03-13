@@ -74,7 +74,7 @@ h1 {
 .input-wrapper input[type="text"] {
     background: var(--input-bg);
     border: 2px solid transparent;
-    padding: 12px 45px 12px 12px; /* Padding droit pour ne pas chevaucher le smiley */
+    padding: 12px 45px 12px 12px;
     border-radius: 8px;
     color: white;
     width: 100%;
@@ -136,19 +136,39 @@ h1 {
     transform: scale(1.2);
 }
 
-/* --- BOUTONS ET SLIDERS --- */
-.size-control {
+/* --- CONTRÔLES DE STYLE (Taille + Police) --- */
+.style-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
     background: rgba(0, 0, 0, 0.2);
     padding: 15px;
-    border-radius: 8px;
+    border-radius: 12px;
 }
 
-.size-control label {
+.style-controls label {
     display: block;
     font-size: 0.85rem;
     font-weight: 700;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     color: #94a3b8;
+}
+
+/* Style spécifique du sélecteur de police */
+select {
+    width: 100%;
+    background: var(--input-bg);
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    outline: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+}
+
+select:focus {
+    border-color: var(--accent);
 }
 
 input[type="range"] {
@@ -157,6 +177,15 @@ input[type="range"] {
     cursor: pointer;
 }
 
+.hint {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    text-align: center;
+    font-style: italic;
+    margin: 5px 0;
+}
+
+/* --- BOUTONS --- */
 .file-label {
     background: var(--accent);
     padding: 15px;
@@ -220,6 +249,7 @@ canvas {
     height: auto; 
     display: block; 
     border-radius: 8px;
+    cursor: move; /* Indique que le texte peut être déplacé */
 }
 
 /* --- GALERIE --- */
