@@ -10,7 +10,7 @@ const saveBtn = document.getElementById('saveBtn');
 const galleryContainer = document.getElementById('galleryContainer');
 
 let activeImage = null;
-let fileType = 'image/png'; // Variable pour stocker le format d'origine
+let fileType = 'image/png'; // Variable pour stocker le format d'origine (JPG ou PNG)
 
 // Déclencheur pour le bouton de fichier
 document.getElementById('labelTrigger').addEventListener('click', () => imageInput.click());
@@ -37,6 +37,7 @@ imageInput.addEventListener('change', (e) => {
 
 /**
  * Fonction de retour à la ligne avancée (Mots + Lettres)
+ * Supporte aussi les emojis Unicode
  */
 function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false) {
     const words = text.split(' ');
@@ -53,7 +54,7 @@ function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false)
         } else {
             let wordMetrics = context.measureText(words[i]);
             if (wordMetrics.width > maxWidth) {
-                let chars = words[i].split('');
+                let chars = Array.from(words[i]); // Utilise Array.from pour ne pas casser les emojis
                 let subWord = '';
                 for (let j = 0; j < chars.length; j++) {
                     let testCharLine = currentLine + subWord + chars[j];
@@ -100,7 +101,10 @@ function drawMeme() {
     ctx.drawImage(activeImage, 0, 0, renderWidth, renderHeight);
 
     const size = parseInt(fontSizeRange.value);
-    ctx.font = `bold ${size}px Impact, sans-serif`;
+    
+    // MISE À JOUR : Support Emoji robuste pour le Canvas
+    ctx.font = `bold ${size}px Impact, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+    
     ctx.textAlign = 'center';
     ctx.fillStyle = 'white';
     ctx.strokeStyle = 'black';
@@ -130,7 +134,7 @@ downloadBtn.addEventListener('click', () => {
     const extension = (fileType === 'image/jpeg' || fileType === 'image/jpg') ? 'jpg' : 'png';
     link.download = `meme_supinfo.${extension}`;
     
-    // On exporte avec le type d'origine (et une qualité de 0.9 pour le JPEG)
+    // On exporte avec le type d'origine
     link.href = canvas.toDataURL(fileType, 0.9);
     link.click();
 });
@@ -154,7 +158,6 @@ shareBtn.addEventListener('click', async () => {
 saveBtn.addEventListener('click', () => {
     if(!activeImage) return;
     const saved = JSON.parse(localStorage.getItem('supinfoMemes') || '[]');
-    // Sauvegarde dans le format d'origine
     saved.unshift(canvas.toDataURL(fileType));
     if(saved.length > 12) saved.pop();
     localStorage.setItem('supinfoMemes', JSON.stringify(saved));
