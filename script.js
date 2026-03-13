@@ -8,37 +8,53 @@ const downloadBtn = document.getElementById('downloadBtn');
 const shareBtn = document.getElementById('shareBtn');
 const saveBtn = document.getElementById('saveBtn');
 const galleryContainer = document.getElementById('galleryContainer');
-const emojiBtn = document.getElementById('emojiBtn');
-const emojiList = document.getElementById('emojiList');
+const emojiListTop = document.getElementById('emojiListTop');
+const emojiListBottom = document.getElementById('emojiListBottom');
 
 let activeImage = null;
 let fileType = 'image/png'; 
-let lastFocusedInput = topText; // Par défaut sur le champ du haut
 
-// --- GESTION DES EMOJIS ---
-// On mémorise quel champ de texte l'utilisateur a cliqué en dernier
-topText.addEventListener('focus', () => lastFocusedInput = topText);
-bottomText.addEventListener('focus', () => lastFocusedInput = bottomText);
+// --- GESTION DES EMOJIS (MODE CLAVIER CONTEXTUEL) ---
 
-// Afficher/Cacher la liste d'emojis
-emojiBtn.addEventListener('click', (e) => {
-    e.stopPropagation(); // Empêche la fermeture immédiate
-    emojiList.style.display = emojiList.style.display === 'none' ? 'grid' : 'none';
+function closeEmojis() {
+    emojiListTop.style.display = 'none';
+    emojiListBottom.style.display = 'none';
+}
+
+// Affiche la liste correspondante quand on clique dans un champ
+topText.addEventListener('focus', () => {
+    closeEmojis();
+    emojiListTop.style.display = 'grid';
 });
 
-// Insertion de l'emoji au clic
-document.querySelectorAll('#emojiList span').forEach(emoji => {
-    emoji.addEventListener('click', () => {
-        lastFocusedInput.value += emoji.innerText;
-        drawMeme(); // Met à jour le canvas
-        lastFocusedInput.focus(); // Garde le curseur dans le champ
-        emojiList.style.display = 'none';
+bottomText.addEventListener('focus', () => {
+    closeEmojis();
+    emojiListBottom.style.display = 'grid';
+});
+
+// Insertion Emoji pour le champ du HAUT
+document.querySelectorAll('#emojiListTop span').forEach(emoji => {
+    emoji.addEventListener('mousedown', (e) => {
+        e.preventDefault(); // Empêche le champ de perdre le focus
+        topText.value += emoji.innerText;
+        drawMeme();
     });
 });
 
-// Ferme la liste si on clique ailleurs sur la page
-document.addEventListener('click', () => {
-    emojiList.style.display = 'none';
+// Insertion Emoji pour le champ du BAS
+document.querySelectorAll('#emojiListBottom span').forEach(emoji => {
+    emoji.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        bottomText.value += emoji.innerText;
+        drawMeme();
+    });
+});
+
+// Fermer les emojis si on clique en dehors des champs
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.input-wrapper')) {
+        closeEmojis();
+    }
 });
 
 // --- IMPORTATION DE L'IMAGE ---
@@ -116,6 +132,7 @@ function drawMeme() {
     ctx.drawImage(activeImage, 0, 0, rW, rH);
 
     const size = parseInt(fontSizeRange.value);
+    // Support Emoji robuste
     ctx.font = `bold ${size}px Impact, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillStyle = 'white';
@@ -131,7 +148,7 @@ function drawMeme() {
     wrapText(ctx, bottomText.value.toUpperCase(), canvas.width / 2, canvas.height - 30, maxWidth, lineHeight, true);
 }
 
-// --- ÉVÉNEMENTS & BOUTONS ---
+// --- ÉVÉNEMENTS ---
 [topText, bottomText, fontSizeRange].forEach(el => {
     el.addEventListener('input', () => { if(activeImage) drawMeme(); });
 });
@@ -141,7 +158,7 @@ downloadBtn.addEventListener('click', () => {
     const link = document.createElement('a');
     const ext = (fileType === 'image/jpeg' || fileType === 'image/jpg') ? 'jpg' : 'png';
     link.download = `meme_supinfo.${ext}`;
-    link.href = canvas.toDataURL(fileType, 0.9);
+    link.href = canvas.toToDataURL(fileType, 0.9);
     link.click();
 });
 
