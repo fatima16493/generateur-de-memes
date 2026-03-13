@@ -20,7 +20,31 @@ let selectedElementIndex = null;
 let currentFilter = 'none';
 let isDragging = false;
 
-// --- 1. GESTION DE L'IMAGE & MODÈLES ---
+// --- 1. FONCTION DE RETOUR À LA LIGNE (WRAPPING) ---
+function wrapText(context, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(' ');
+    let line = '';
+    let testY = y;
+
+    for (let n = 0; n < words.length; n++) {
+        let testLine = line + words[n] + ' ';
+        let metrics = context.measureText(testLine);
+        let testWidth = metrics.width;
+
+        if (testWidth > maxWidth && n > 0) {
+            context.strokeText(line, x, testY);
+            context.fillText(line, x, testY);
+            line = words[n] + ' ';
+            testY += lineHeight;
+        } else {
+            line = testLine;
+        }
+    }
+    context.strokeText(line, x, testY);
+    context.fillText(line, x, testY);
+}
+
+// --- 2. GESTION DE L'IMAGE & MODÈLES ---
 document.getElementById('labelTrigger').addEventListener('click', () => imageInput.click());
 
 imageInput.addEventListener('change', (e) => {
@@ -38,19 +62,17 @@ document.querySelectorAll('.template-thumb').forEach(thumb => {
 function loadBaseImage(src) {
     const img = new Image();
     img.crossOrigin = "anonymous"; 
-    
     img.onload = () => {
         activeImage = img;
         elements = []; 
         selectedElementIndex = null;
         drawMeme();
     };
-    img.onerror = () => alert("Image introuvable ou erreur de connexion.");
+    img.onerror = () => alert("Erreur lors du chargement de l'image.");
     img.src = src;
 }
 
-// --- 2. MISE À JOUR EN DIRECT (Couleurs, Polices, Taille) ---
-// Cette partie permet d'appliquer les changements dès qu'on touche aux curseurs
+// --- 3. MISE À JOUR EN DIRECT ---
 [textColor, fontSizeRange, fontSelect].forEach(control => {
     control.addEventListener('input', () => {
         if (selectedElementIndex !== null) {
@@ -65,7 +87,7 @@ function loadBaseImage(src) {
     });
 });
 
-// --- 3. FILTRES D'AMBIANCE ---
+// --- 4. FILTRES D'AMBIANCE ---
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         currentFilter = btn.getAttribute('data-filter');
@@ -73,7 +95,7 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     });
 });
 
-// --- 4. AJOUT DE TEXTES ET EMOJIS ---
+// --- 5. AJOUT DE TEXTES ET EMOJIS ---
 addTextBtn.addEventListener('click', () => {
     const val = textInput.value.trim();
     if (val === "" || !activeImage) return;
@@ -106,19 +128,14 @@ document.querySelectorAll('.emoji-item').forEach(emoji => {
     });
 });
 
-// --- 5. LOGIQUE DE DÉPLACEMENT ET SÉLECTION ---
+// --- 6. LOGIQUE DE DÉPLACEMENT ET SÉLECTION ---
 function getMousePos(e) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-    return {
-        x: (clientX - rect.left) * scaleX,
-        y: (clientY - rect.top) * scaleY
-    };
+    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
 }
 
 const startDrag = (e) => {
@@ -128,11 +145,9 @@ const startDrag = (e) => {
 
     for (let i = elements.length - 1; i >= 0; i--) {
         const el = elements[i];
-        // Détection de collision
         if (Math.abs(pos.x - el.x) < 100 && Math.abs(pos.y - el.y) < 40) {
             selectedElementIndex = i;
             isDragging = true;
-            
             if (el.type === 'text') {
                 textInput.value = el.content;
                 textColor.value = el.color;
@@ -150,7 +165,6 @@ const startDrag = (e) => {
 
 canvas.addEventListener('mousedown', startDrag);
 canvas.addEventListener('touchstart', startDrag);
-
 window.addEventListener('mousemove', (e) => {
     if (!isDragging || selectedElementIndex === null) return;
     const pos = getMousePos(e);
@@ -158,7 +172,6 @@ window.addEventListener('mousemove', (e) => {
     elements[selectedElementIndex].y = pos.y;
     drawMeme();
 });
-
 window.addEventListener('mouseup', () => isDragging = false);
 window.addEventListener('touchend', () => isDragging = false);
 
@@ -171,7 +184,7 @@ deleteSelectedBtn.addEventListener('click', () => {
     }
 });
 
-// --- 6. DESSIN SUR LE CANVAS ---
+// --- 7. DESSIN SUR LE CANVAS ---
 function drawMeme() {
     if (!activeImage) return;
 
@@ -193,8 +206,10 @@ function drawMeme() {
             ctx.fillStyle = el.color;
             ctx.strokeStyle = 'black';
             ctx.lineWidth = el.size / 7;
-            ctx.strokeText(el.content, el.x, el.y);
-            ctx.fillText(el.content, el.x, el.y);
+
+            const maxWidth = canvas.width - 60; 
+            const lineHeight = el.size * 1.1; 
+            wrapText(ctx, el.content, el.x, el.y, maxWidth, lineHeight);
         } else {
             ctx.font = `${el.size}px Arial`;
             ctx.fillText(el.content, el.x, el.y);
@@ -210,7 +225,7 @@ function drawMeme() {
     });
 }
 
-// --- 7. ACTIONS FINALES ---
+// --- 8. ACTIONS FINALES ---
 
 // Téléchargement
 document.getElementById('downloadBtn').addEventListener('click', () => {
@@ -223,7 +238,7 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
     link.click();
 });
 
-// Partage (Amélioré)
+// Partage
 shareBtn.addEventListener('click', async () => {
     if (!activeImage) return;
     try {
@@ -234,22 +249,15 @@ shareBtn.addEventListener('click', async () => {
         const file = new File([blob], 'meme.png', { type: 'image/png' });
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-                files: [file],
-                title: 'Meme Generator SUPINFO',
-                text: 'Regarde le mème que j\'ai créé !'
-            });
+            await navigator.share({ files: [file], title: 'Meme Generator SUPINFO' });
         } else {
-            // Backup : Télécharge si le partage est bloqué
             const link = document.createElement('a');
-            link.download = 'meme_partage.png';
+            link.download = 'meme_export.png';
             link.href = dataUrl;
             link.click();
-            alert("Partage direct impossible sur ce navigateur. Image téléchargée.");
+            alert("Partage direct non supporté. Image téléchargée.");
         }
-    } catch (err) {
-        console.error("Erreur de partage:", err);
-    }
+    } catch (err) { console.error(err); }
 });
 
 // Sauvegarde Locale
