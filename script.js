@@ -15,7 +15,7 @@ const clearGalleryBtn = document.getElementById('clearGallery');
 
 // --- VARIABLES D'ÉTAT ---
 let activeImage = null;
-let elements = []; // {content, x, y, color, size, font, type}
+let elements = []; 
 let selectedElementIndex = null;
 let currentFilter = 'none';
 let isDragging = false;
@@ -37,20 +37,35 @@ document.querySelectorAll('.template-thumb').forEach(thumb => {
 
 function loadBaseImage(src) {
     const img = new Image();
-    // CRUCIAL : Permet de manipuler l'image et de la télécharger sans erreur de sécurité
     img.crossOrigin = "anonymous"; 
     
     img.onload = () => {
         activeImage = img;
-        elements = []; // On réinitialise pour une nouvelle création
+        elements = []; 
         selectedElementIndex = null;
         drawMeme();
     };
-    img.onerror = () => alert("Impossible de charger l'image. Vérifiez votre connexion.");
+    img.onerror = () => alert("Image introuvable ou erreur de connexion.");
     img.src = src;
 }
 
-// --- 2. FILTRES D'AMBIANCE ---
+// --- 2. MISE À JOUR EN DIRECT (Couleurs, Polices, Taille) ---
+// Cette partie permet d'appliquer les changements dès qu'on touche aux curseurs
+[textColor, fontSizeRange, fontSelect].forEach(control => {
+    control.addEventListener('input', () => {
+        if (selectedElementIndex !== null) {
+            const el = elements[selectedElementIndex];
+            if (el.type === 'text') {
+                el.color = textColor.value;
+                el.size = parseInt(fontSizeRange.value);
+                el.font = fontSelect.value;
+                drawMeme();
+            }
+        }
+    });
+});
+
+// --- 3. FILTRES D'AMBIANCE ---
 document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         currentFilter = btn.getAttribute('data-filter');
@@ -58,7 +73,7 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     });
 });
 
-// --- 3. AJOUT DE TEXTES ET EMOJIS ---
+// --- 4. AJOUT DE TEXTES ET EMOJIS ---
 addTextBtn.addEventListener('click', () => {
     const val = textInput.value.trim();
     if (val === "" || !activeImage) return;
@@ -91,13 +106,12 @@ document.querySelectorAll('.emoji-item').forEach(emoji => {
     });
 });
 
-// --- 4. LOGIQUE DE DÉPLACEMENT ET SÉLECTION ---
+// --- 5. LOGIQUE DE DÉPLACEMENT ET SÉLECTION ---
 function getMousePos(e) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
     
-    // Support pour mobile et souris
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
@@ -114,8 +128,8 @@ const startDrag = (e) => {
 
     for (let i = elements.length - 1; i >= 0; i--) {
         const el = elements[i];
-        // Zone de clic approximative
-        if (Math.abs(pos.x - el.x) < 80 && Math.abs(pos.y - el.y) < 40) {
+        // Détection de collision
+        if (Math.abs(pos.x - el.x) < 100 && Math.abs(pos.y - el.y) < 40) {
             selectedElementIndex = i;
             isDragging = true;
             
@@ -157,7 +171,7 @@ deleteSelectedBtn.addEventListener('click', () => {
     }
 });
 
-// --- 5. DESSIN SUR LE CANVAS ---
+// --- 6. DESSIN SUR LE CANVAS ---
 function drawMeme() {
     if (!activeImage) return;
 
@@ -190,15 +204,15 @@ function drawMeme() {
             ctx.strokeStyle = '#6366f1';
             ctx.lineWidth = 2;
             ctx.setLineDash([5, 5]);
-            ctx.strokeRect(el.x - 100, el.y - el.size/2 - 5, 200, el.size + 10);
+            ctx.strokeRect(el.x - 110, el.y - el.size/2 - 10, 220, el.size + 20);
             ctx.setLineDash([]);
         }
     });
 }
 
-// --- 6. ACTIONS (DOWNLOAD, SHARE, SAVE) ---
+// --- 7. ACTIONS FINALES ---
 
-// Télécharger
+// Téléchargement
 document.getElementById('downloadBtn').addEventListener('click', () => {
     if (!activeImage) return;
     selectedElementIndex = null; 
@@ -209,25 +223,36 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
     link.click();
 });
 
-// Partager
+// Partage (Amélioré)
 shareBtn.addEventListener('click', async () => {
     if (!activeImage) return;
-    const dataUrl = canvas.toDataURL("image/png");
-    const blob = await (await fetch(dataUrl)).blob();
-    const file = new File([blob], 'meme.png', { type: 'image/png' });
+    try {
+        selectedElementIndex = null;
+        drawMeme();
+        const dataUrl = canvas.toDataURL("image/png");
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], 'meme.png', { type: 'image/png' });
 
-    if (navigator.share) {
-        navigator.share({
-            files: [file],
-            title: 'Mon Mème SUPINFO',
-            text: 'Regarde le mème que je viens de créer !'
-        }).catch(console.error);
-    } else {
-        alert("Le partage n'est pas supporté sur ce navigateur (utilisez HTTPS).");
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                files: [file],
+                title: 'Meme Generator SUPINFO',
+                text: 'Regarde le mème que j\'ai créé !'
+            });
+        } else {
+            // Backup : Télécharge si le partage est bloqué
+            const link = document.createElement('a');
+            link.download = 'meme_partage.png';
+            link.href = dataUrl;
+            link.click();
+            alert("Partage direct impossible sur ce navigateur. Image téléchargée.");
+        }
+    } catch (err) {
+        console.error("Erreur de partage:", err);
     }
 });
 
-// Sauvegarder en Galerie
+// Sauvegarde Locale
 document.getElementById('saveBtn').addEventListener('click', () => {
     if (!activeImage) return;
     const memeData = {
@@ -242,9 +267,8 @@ document.getElementById('saveBtn').addEventListener('click', () => {
     displayGallery();
 });
 
-// Effacer la galerie
 clearGalleryBtn.addEventListener('click', () => {
-    if (confirm("Voulez-vous vraiment vider votre galerie ?")) {
+    if (confirm("Vider la galerie ?")) {
         localStorage.removeItem('supinfoMemes');
         displayGallery();
     }
@@ -272,5 +296,4 @@ function displayGallery() {
     });
 }
 
-// Init
 displayGallery();
