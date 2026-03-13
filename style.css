@@ -28,7 +28,6 @@ body {
     min-height: 100vh;
 }
 
-/* Titre avec dégradé et correction de compatibilité */
 h1 {
     font-size: 3rem;
     font-weight: 900;
@@ -40,6 +39,7 @@ h1 {
     text-align: center;
 }
 
+/* Structure principale */
 .main-container {
     display: grid;
     grid-template-columns: 350px 1fr;
@@ -65,6 +65,48 @@ h1 {
     height: fit-content;
 }
 
+/* Gestion du Sélecteur d'Emojis */
+.emoji-picker-container {
+    position: relative;
+    width: 100%;
+}
+
+.emoji-list {
+    position: absolute;
+    top: 55px;
+    left: 0;
+    background: #1e293b;
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    z-index: 1000;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.emoji-list span {
+    font-size: 1.5rem;
+    cursor: pointer;
+    text-align: center;
+    padding: 5px;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+.emoji-list span:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.2);
+}
+
+/* Inputs */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
 input[type="text"] {
     background: var(--input-bg);
     border: 2px solid transparent;
@@ -74,13 +116,14 @@ input[type="text"] {
     outline: none;
     transition: 0.3s;
     font-size: 1rem;
+    width: 100%;
 }
 
 input[type="text"]:focus { 
     border-color: var(--accent); 
 }
 
-/* Style du Slider de taille de police */
+/* Sliders */
 .size-control {
     background: rgba(0, 0, 0, 0.2);
     padding: 15px;
@@ -101,6 +144,7 @@ input[type="range"] {
     cursor: pointer;
 }
 
+/* Boutons */
 .file-label {
     background: var(--accent);
     padding: 15px;
@@ -110,11 +154,6 @@ input[type="range"] {
     font-weight: 700;
     transition: 0.2s;
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-}
-
-.file-label:hover { 
-    background: var(--accent-bright);
-    transform: translateY(-1px);
 }
 
 .button-group { 
@@ -137,37 +176,37 @@ button {
 .primary-btn { background: #334155; color: white; }
 .share-btn { background: var(--success); color: white; }
 .secondary-btn { background: #475569; color: white; }
+.clear-btn { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 5px 12px; text-transform: none; }
 
 button:hover { 
     transform: translateY(-2px); 
     filter: brightness(1.1);
 }
 
-/* MODIFICATION : Zone d'aperçu optimisée pour le Canvas redimensionné */
+/* Zone Preview / Canvas */
 .preview-area {
     background: #000;
     border-radius: 16px;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 550px; /* Assure que la zone est assez grande */
+    min-height: 550px;
     width: 100%;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     border: 1px solid rgba(255,255,255,0.05);
     padding: 20px;
-    overflow: hidden; /* Empêche les débordements visuels */
+    overflow: hidden;
 }
 
 canvas { 
-    max-width: 100%; /* S'adapte à la largeur de l'écran */
-    max-height: 750px; /* Empêche l'image de devenir trop géante sur grand écran */
+    max-width: 100%;
+    max-height: 750px;
     height: auto; 
     display: block; 
     border-radius: 8px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
 
-/* Section Galerie */
+/* Galerie */
 .gallery-section { 
     width: 100%; 
     max-width: 1100px; 
@@ -181,15 +220,6 @@ canvas {
     border-bottom: 2px solid var(--accent); 
     margin-bottom: 25px; 
     padding-bottom: 10px; 
-}
-
-.clear-btn { 
-    background: transparent; 
-    color: var(--danger); 
-    border: 1px solid var(--danger); 
-    padding: 5px 12px; 
-    border-radius: 6px;
-    font-size: 0.75rem;
 }
 
 .gallery-grid {
