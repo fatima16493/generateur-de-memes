@@ -145,6 +145,7 @@ const startDrag = (e) => {
 
     for (let i = elements.length - 1; i >= 0; i--) {
         const el = elements[i];
+        // Détection de clic sur l'élément (zone de 100x40px autour du centre)
         if (Math.abs(pos.x - el.x) < 100 && Math.abs(pos.y - el.y) < 40) {
             selectedElementIndex = i;
             isDragging = true;
@@ -165,6 +166,7 @@ const startDrag = (e) => {
 
 canvas.addEventListener('mousedown', startDrag);
 canvas.addEventListener('touchstart', startDrag);
+
 window.addEventListener('mousemove', (e) => {
     if (!isDragging || selectedElementIndex === null) return;
     const pos = getMousePos(e);
@@ -172,6 +174,7 @@ window.addEventListener('mousemove', (e) => {
     elements[selectedElementIndex].y = pos.y;
     drawMeme();
 });
+
 window.addEventListener('mouseup', () => isDragging = false);
 window.addEventListener('touchend', () => isDragging = false);
 
@@ -193,9 +196,10 @@ function drawMeme() {
     canvas.width = baseWidth;
     canvas.height = activeImage.height * ratio;
 
+    // Application du filtre sur l'image de fond uniquement
     ctx.filter = currentFilter;
     ctx.drawImage(activeImage, 0, 0, canvas.width, canvas.height);
-    ctx.filter = 'none';
+    ctx.filter = 'none'; // Désactivation pour que le texte reste net
 
     elements.forEach((el, index) => {
         ctx.textAlign = 'center';
@@ -215,6 +219,7 @@ function drawMeme() {
             ctx.fillText(el.content, el.x, el.y);
         }
 
+        // Encadré de sélection
         if (selectedElementIndex === index) {
             ctx.strokeStyle = '#6366f1';
             ctx.lineWidth = 2;
@@ -260,7 +265,7 @@ shareBtn.addEventListener('click', async () => {
     } catch (err) { console.error(err); }
 });
 
-// Sauvegarde Locale
+// Sauvegarde Locale (Galerie)
 document.getElementById('saveBtn').addEventListener('click', () => {
     if (!activeImage) return;
     const memeData = {
@@ -276,7 +281,7 @@ document.getElementById('saveBtn').addEventListener('click', () => {
 });
 
 clearGalleryBtn.addEventListener('click', () => {
-    if (confirm("Vider la galerie ?")) {
+    if (confirm("Voulez-vous vraiment vider votre galerie ?")) {
         localStorage.removeItem('supinfoMemes');
         displayGallery();
     }
