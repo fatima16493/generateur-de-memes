@@ -11,50 +11,78 @@
     
     <div class="main-container">
         <div class="controls">
-            <div class="file-label" id="labelTrigger">Choisir une image</div>
-            <input type="file" id="imageInput" accept="image/jpeg, image/png" style="display: none;">
             
-            <div class="input-wrapper">
-                <input type="text" id="topText" placeholder="Texte du haut" autocomplete="off">
-                <button type="button" class="emoji-trigger" data-target="emojiListTop">😊</button>
-                <div id="emojiListTop" class="emoji-list" style="display: none;">
-                    <span>😂</span><span>🔥</span><span>😎</span><span>💀</span>
-                    <span>👑</span><span>💯</span><span>🚀</span><span>👀</span>
+            <div class="control-section">
+                <h3>1. Choisir une base</h3>
+                <div class="file-label" id="labelTrigger">Importer mon image</div>
+                <input type="file" id="imageInput" accept="image/jpeg, image/png" style="display: none;">
+                
+                <div class="template-library">
+                    <p>Ou utiliser un modèle :</p>
+                    <div class="template-grid">
+                        <img src="templates/doge.jpg" class="template-thumb" alt="Doge">
+                        <img src="templates/cat.jpg" class="template-thumb" alt="Cat">
+                        <img src="templates/distracted.jpg" class="template-thumb" alt="Distracted Boyfriend">
+                    </div>
                 </div>
             </div>
-            
-            <div class="input-wrapper">
-                <input type="text" id="bottomText" placeholder="Texte du bas" autocomplete="off">
-                <button type="button" class="emoji-trigger" data-target="emojiListBottom">😊</button>
-                <div id="emojiListBottom" class="emoji-list" style="display: none;">
-                    <span>✨</span><span>👏</span><span>❤️</span><span>🎉</span>
-                    <span>🤔</span><span>😭</span><span>🤮</span><span>💪</span>
+
+            <div class="control-section">
+                <h3>2. Ambiance du fond</h3>
+                <div class="filter-group">
+                    <button type="button" class="filter-btn" data-filter="none">Normal</button>
+                    <button type="button" class="filter-btn" data-filter="grayscale(100%)">Triste (N&B)</button>
+                    <button type="button" class="filter-btn" data-filter="sepia(100%)">Ancien</button>
+                    <button type="button" class="filter-btn" data-filter="brightness(1.5) contrast(1.2)">Joie</button>
+                    <button type="button" class="filter-btn" data-filter="hue-rotate(300deg) saturate(5)">Colère</button>
                 </div>
             </div>
-            
-            <div class="style-controls">
-                <div class="size-control">
-                    <label>Taille du texte :</label>
-                    <input type="range" id="fontSizeRange" min="20" max="150" value="60">
+
+            <div class="control-section">
+                <h3>3. Texte & Émotions</h3>
+                <div class="input-wrapper">
+                    <input type="text" id="textInput" placeholder="Tapez votre texte ici..." autocomplete="off">
+                    <button type="button" id="addTextBtn" class="add-btn">AJOUTER</button>
+                </div>
+
+                <div class="emoji-selector">
+                    <p>Exprimer une émotion :</p>
+                    <div class="emoji-row">
+                        <span class="emoji-item">😂</span><span class="emoji-item">😡</span>
+                        <span class="emoji-item">😭</span><span class="emoji-item">😎</span>
+                        <span class="emoji-item">🔥</span><span class="emoji-item">✨</span>
+                        <span class="emoji-item">👑</span><span class="emoji-item">💀</span>
+                    </div>
+                </div>
+
+                <div class="style-row">
+                    <div class="style-item">
+                        <label>Couleur :</label>
+                        <input type="color" id="textColor" value="#ffffff">
+                    </div>
+                    <div class="style-item">
+                        <label>Taille :</label>
+                        <input type="range" id="fontSizeRange" min="20" max="150" value="60">
+                    </div>
                 </div>
 
                 <div class="font-control">
-                    <label>Police d'écriture :</label>
+                    <label>Police :</label>
                     <select id="fontSelect">
                         <option value="Impact" selected>Impact (Meme)</option>
                         <option value="Arial">Arial</option>
                         <option value="Verdana">Verdana</option>
-                        <option value="Times New Roman">Times New Roman</option>
-                        <option value="Georgia">Georgia</option>
                         <option value="Courier New">Courier New</option>
                     </select>
                 </div>
+
+                <button id="deleteSelectedBtn" class="delete-btn" style="display:none;">Supprimer l'élément sélectionné</button>
             </div>
 
-            <p class="hint">💡 Astuce : Faites glisser le texte sur l'image pour le déplacer !</p>
+            <p class="hint">💡 Astuces : Cliquez sur un texte pour le modifier. Faites-le glisser pour le déplacer !</p>
             
             <div class="button-group">
-                <button id="downloadBtn" class="primary-btn">Télécharger</button>
+                <button id="downloadBtn" class="primary-btn">Télécharger le mème</button>
                 <button id="shareBtn" class="share-btn">Partager</button>
                 <button id="saveBtn" class="secondary-btn">Sauvegarder en Galerie</button>
             </div>
@@ -68,6 +96,7 @@
     <section class="gallery-section">
         <div class="gallery-header">
             <h2>Ma Galerie</h2>
+            <p>Cliquez sur un mème pour le modifier à nouveau</p>
             <button id="clearGallery" class="clear-btn">Effacer tout</button>
         </div>
         <div id="galleryContainer" class="gallery-grid"></div>
