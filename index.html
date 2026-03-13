@@ -5,22 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meme Generator - Admission SUPINFO</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
 </head>
 <body>
     <h1>Meme Generator</h1>
     
     <div class="main-container">
         <div class="controls">
-            <div class="file-label" id="labelTrigger">Choisir une image / GIF</div>
-            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+            <div class="file-label" id="labelTrigger">Choisir une image (JPG, PNG)</div>
+            <input type="file" id="imageInput" accept="image/jpeg, image/png" style="display: none;">
             
+            <div class="emoji-picker-container">
+                <button type="button" id="emojiBtn" class="secondary-btn">Ajouter un Emoji 😀</button>
+                <div id="emojiList" class="emoji-list" style="display: none;">
+                    <span>😂</span><span>🔥</span><span>😎</span><span>💀</span>
+                    <span>👑</span><span>💯</span><span>🚀</span><span>👀</span>
+                    <span>✨</span><span>👏</span><span>❤️</span><span>🎉</span>
+                    <span>🤔</span><span>😭</span><span>🤮</span><span>💪</span>
+                </div>
+            </div>
+
             <div class="input-group">
                 <input type="text" id="topText" placeholder="Texte du haut">
-                <span class="hint">Astuce : Utilisez Win + . pour les emojis 😂</span>
             </div>
             
-            <input type="text" id="bottomText" placeholder="Texte du bas">
+            <div class="input-group">
+                <input type="text" id="bottomText" placeholder="Texte du bas">
+            </div>
             
             <div class="size-control">
                 <label>Taille du texte :</label>
