@@ -10,10 +10,12 @@ const fontSizeRange = document.getElementById('fontSizeRange');
 const fontSelect = document.getElementById('fontSelect');
 const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
 const galleryContainer = document.getElementById('galleryContainer');
+const shareBtn = document.getElementById('shareBtn');
+const clearGalleryBtn = document.getElementById('clearGallery');
 
 // --- VARIABLES D'ÉTAT ---
 let activeImage = null;
-let elements = []; // Contient tous les textes et emojis {content, x, y, color, size, font, type}
+let elements = []; // {content, x, y, color, size, font, type}
 let selectedElementIndex = null;
 let currentFilter = 'none';
 let isDragging = false;
@@ -35,12 +37,16 @@ document.querySelectorAll('.template-thumb').forEach(thumb => {
 
 function loadBaseImage(src) {
     const img = new Image();
-    img.crossOrigin = "anonymous"; // Évite les erreurs de sécurité au téléchargement
+    // CRUCIAL : Permet de manipuler l'image et de la télécharger sans erreur de sécurité
+    img.crossOrigin = "anonymous"; 
+    
     img.onload = () => {
         activeImage = img;
-        elements = []; // On réinitialise les textes pour une nouvelle image
+        elements = []; // On réinitialise pour une nouvelle création
+        selectedElementIndex = null;
         drawMeme();
     };
+    img.onerror = () => alert("Impossible de charger l'image. Vérifiez votre connexion.");
     img.src = src;
 }
 
@@ -55,7 +61,7 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 // --- 3. AJOUT DE TEXTES ET EMOJIS ---
 addTextBtn.addEventListener('click', () => {
     const val = textInput.value.trim();
-    if (val === "") return;
+    if (val === "" || !activeImage) return;
     
     elements.push({
         content: val,
@@ -73,6 +79,7 @@ addTextBtn.addEventListener('click', () => {
 
 document.querySelectorAll('.emoji-item').forEach(emoji => {
     emoji.addEventListener('click', () => {
+        if (!activeImage) return;
         elements.push({
             content: emoji.innerText,
             x: canvas.width / 2,
@@ -89,26 +96,29 @@ function getMousePos(e) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
+    
+    // Support pour mobile et souris
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
     return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
     };
 }
 
-canvas.addEventListener('mousedown', (e) => {
+const startDrag = (e) => {
     if (!activeImage) return;
     const pos = getMousePos(e);
     selectedElementIndex = null;
 
-    // On parcourt à l'envers pour sélectionner l'élément du dessus
     for (let i = elements.length - 1; i >= 0; i--) {
         const el = elements[i];
-        // Détection de clic (boîte de collision simplifiée)
-        if (Math.abs(pos.x - el.x) < 100 && Math.abs(pos.y - el.y) < 40) {
+        // Zone de clic approximative
+        if (Math.abs(pos.x - el.x) < 80 && Math.abs(pos.y - el.y) < 40) {
             selectedElementIndex = i;
             isDragging = true;
             
-            // Synchroniser les contrôles avec l'élément sélectionné
             if (el.type === 'text') {
                 textInput.value = el.content;
                 textColor.value = el.color;
@@ -122,7 +132,10 @@ canvas.addEventListener('mousedown', (e) => {
     }
     deleteSelectedBtn.style.display = 'none';
     drawMeme();
-});
+};
+
+canvas.addEventListener('mousedown', startDrag);
+canvas.addEventListener('touchstart', startDrag);
 
 window.addEventListener('mousemove', (e) => {
     if (!isDragging || selectedElementIndex === null) return;
@@ -133,6 +146,7 @@ window.addEventListener('mousemove', (e) => {
 });
 
 window.addEventListener('mouseup', () => isDragging = false);
+window.addEventListener('touchend', () => isDragging = false);
 
 deleteSelectedBtn.addEventListener('click', () => {
     if (selectedElementIndex !== null) {
@@ -147,73 +161,105 @@ deleteSelectedBtn.addEventListener('click', () => {
 function drawMeme() {
     if (!activeImage) return;
 
-    // Mise à l'échelle pour garder une bonne qualité
     const baseWidth = 800;
     const ratio = baseWidth / activeImage.width;
     canvas.width = baseWidth;
     canvas.height = activeImage.height * ratio;
 
-    // Dessin du fond avec filtre
     ctx.filter = currentFilter;
     ctx.drawImage(activeImage, 0, 0, canvas.width, canvas.height);
     ctx.filter = 'none';
 
-    // Dessin des éléments (Textes et Emojis)
     elements.forEach((el, index) => {
-        ctx.font = `bold ${el.size}px "${el.font || 'Impact'}"`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         if (el.type === 'text') {
+            ctx.font = `bold ${el.size}px "${el.font || 'Impact'}"`;
             ctx.fillStyle = el.color;
             ctx.strokeStyle = 'black';
-            ctx.lineWidth = el.size / 6;
+            ctx.lineWidth = el.size / 7;
             ctx.strokeText(el.content, el.x, el.y);
             ctx.fillText(el.content, el.x, el.y);
         } else {
-            // Emojis
             ctx.font = `${el.size}px Arial`;
             ctx.fillText(el.content, el.x, el.y);
         }
 
-        // Indicateur de sélection
         if (selectedElementIndex === index) {
             ctx.strokeStyle = '#6366f1';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(el.x - 110, el.y - el.size/2 - 10, 220, el.size + 20);
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.strokeRect(el.x - 100, el.y - el.size/2 - 5, 200, el.size + 10);
+            ctx.setLineDash([]);
         }
     });
 }
 
-// --- 6. SAUVEGARDE ET GALERIE (RÉÉDITABLE) ---
+// --- 6. ACTIONS (DOWNLOAD, SHARE, SAVE) ---
+
+// Télécharger
+document.getElementById('downloadBtn').addEventListener('click', () => {
+    if (!activeImage) return;
+    selectedElementIndex = null; 
+    drawMeme();
+    const link = document.createElement('a');
+    link.download = 'meme_supinfo.png';
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+});
+
+// Partager
+shareBtn.addEventListener('click', async () => {
+    if (!activeImage) return;
+    const dataUrl = canvas.toDataURL("image/png");
+    const blob = await (await fetch(dataUrl)).blob();
+    const file = new File([blob], 'meme.png', { type: 'image/png' });
+
+    if (navigator.share) {
+        navigator.share({
+            files: [file],
+            title: 'Mon Mème SUPINFO',
+            text: 'Regarde le mème que je viens de créer !'
+        }).catch(console.error);
+    } else {
+        alert("Le partage n'est pas supporté sur ce navigateur (utilisez HTTPS).");
+    }
+});
+
+// Sauvegarder en Galerie
 document.getElementById('saveBtn').addEventListener('click', () => {
     if (!activeImage) return;
-    
     const memeData = {
         backgroundImage: activeImage.src,
         filter: currentFilter,
-        elements: JSON.parse(JSON.stringify(elements)), // Copie profonde
+        elements: JSON.parse(JSON.stringify(elements)),
         preview: canvas.toDataURL("image/png")
     };
-
     const saved = JSON.parse(localStorage.getItem('supinfoMemes') || '[]');
     saved.unshift(memeData);
-    if (saved.length > 12) saved.pop();
-    localStorage.setItem('supinfoMemes', JSON.stringify(saved));
+    localStorage.setItem('supinfoMemes', JSON.stringify(saved.slice(0, 12)));
     displayGallery();
+});
+
+// Effacer la galerie
+clearGalleryBtn.addEventListener('click', () => {
+    if (confirm("Voulez-vous vraiment vider votre galerie ?")) {
+        localStorage.removeItem('supinfoMemes');
+        displayGallery();
+    }
 });
 
 function displayGallery() {
     const saved = JSON.parse(localStorage.getItem('supinfoMemes') || '[]');
     galleryContainer.innerHTML = '';
-    saved.forEach((meme, index) => {
+    saved.forEach((meme) => {
         const div = document.createElement('div');
         div.className = 'gallery-item';
         div.innerHTML = `<img src="${meme.preview}">`;
-        
-        // Clic pour rééditer
-        div.addEventListener('click', () => {
+        div.onclick = () => {
             const img = new Image();
+            img.crossOrigin = "anonymous";
             img.onload = () => {
                 activeImage = img;
                 elements = meme.elements;
@@ -221,20 +267,10 @@ function displayGallery() {
                 drawMeme();
             };
             img.src = meme.backgroundImage;
-        });
+        };
         galleryContainer.appendChild(div);
     });
 }
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
-    if (!activeImage) return;
-    selectedElementIndex = null; // Enlever le cadre de sélection avant export
-    drawMeme();
-    const link = document.createElement('a');
-    link.download = 'mon_meme_supinfo.png';
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-});
-
-// Initialisation
+// Init
 displayGallery();
