@@ -8,21 +8,46 @@ const downloadBtn = document.getElementById('downloadBtn');
 const shareBtn = document.getElementById('shareBtn');
 const saveBtn = document.getElementById('saveBtn');
 const galleryContainer = document.getElementById('galleryContainer');
+const emojiBtn = document.getElementById('emojiBtn');
+const emojiList = document.getElementById('emojiList');
 
 let activeImage = null;
-let fileType = 'image/png'; // Variable pour stocker le format d'origine (JPG ou PNG)
+let fileType = 'image/png'; 
+let lastFocusedInput = topText; // Par défaut sur le champ du haut
 
-// Déclencheur pour le bouton de fichier
+// --- GESTION DES EMOJIS ---
+// On mémorise quel champ de texte l'utilisateur a cliqué en dernier
+topText.addEventListener('focus', () => lastFocusedInput = topText);
+bottomText.addEventListener('focus', () => lastFocusedInput = bottomText);
+
+// Afficher/Cacher la liste d'emojis
+emojiBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // Empêche la fermeture immédiate
+    emojiList.style.display = emojiList.style.display === 'none' ? 'grid' : 'none';
+});
+
+// Insertion de l'emoji au clic
+document.querySelectorAll('#emojiList span').forEach(emoji => {
+    emoji.addEventListener('click', () => {
+        lastFocusedInput.value += emoji.innerText;
+        drawMeme(); // Met à jour le canvas
+        lastFocusedInput.focus(); // Garde le curseur dans le champ
+        emojiList.style.display = 'none';
+    });
+});
+
+// Ferme la liste si on clique ailleurs sur la page
+document.addEventListener('click', () => {
+    emojiList.style.display = 'none';
+});
+
+// --- IMPORTATION DE L'IMAGE ---
 document.getElementById('labelTrigger').addEventListener('click', () => imageInput.click());
 
-// Gestion de l'importation de l'image
 imageInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    // ON DÉTECTE ET ON GARDE LE FORMAT D'ORIGINE
     fileType = file.type;
-
     const reader = new FileReader();
     reader.onload = () => {
         const img = new Image();
@@ -35,10 +60,7 @@ imageInput.addEventListener('change', (e) => {
     reader.readAsDataURL(file);
 });
 
-/**
- * Fonction de retour à la ligne avancée (Mots + Lettres)
- * Supporte aussi les emojis Unicode
- */
+// --- LOGIQUE DU DESSIN (WRAPPING + RENDU) ---
 function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false) {
     const words = text.split(' ');
     let lines = [];
@@ -46,24 +68,21 @@ function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false)
 
     for (let i = 0; i < words.length; i++) {
         let testLine = currentLine + words[i] + ' ';
-        let metrics = context.measureText(testLine);
-        
-        if (metrics.width > maxWidth && i > 0) {
+        if (context.measureText(testLine).width > maxWidth && i > 0) {
             lines.push(currentLine.trim());
             currentLine = words[i] + ' ';
         } else {
             let wordMetrics = context.measureText(words[i]);
             if (wordMetrics.width > maxWidth) {
-                let chars = Array.from(words[i]); // Utilise Array.from pour ne pas casser les emojis
+                let chars = Array.from(words[i]); 
                 let subWord = '';
-                for (let j = 0; j < chars.length; j++) {
-                    let testCharLine = currentLine + subWord + chars[j];
-                    if (context.measureText(testCharLine).width > maxWidth) {
+                for (let char of chars) {
+                    if (context.measureText(currentLine + subWord + char).width > maxWidth) {
                         lines.push((currentLine + subWord).trim());
                         currentLine = '';
-                        subWord = chars[j];
+                        subWord = char;
                     } else {
-                        subWord += chars[j];
+                        subWord += char;
                     }
                 }
                 currentLine = subWord + ' ';
@@ -75,7 +94,6 @@ function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false)
     lines.push(currentLine.trim());
 
     let startY = fromBottom ? y - (lines.length - 1) * lineHeight : y;
-
     lines.forEach((line, index) => {
         let posY = startY + (index * lineHeight);
         context.strokeText(line, x, posY);
@@ -85,26 +103,20 @@ function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false)
 
 function drawMeme() {
     if (!activeImage) return;
-
     const minWidth = 800;
-    let renderWidth = activeImage.width;
-    let renderHeight = activeImage.height;
-
-    if (renderWidth < minWidth) {
-        const ratio = minWidth / renderWidth;
-        renderWidth = minWidth;
-        renderHeight = renderHeight * ratio;
+    let rW = activeImage.width;
+    let rH = activeImage.height;
+    if (rW < minWidth) {
+        const ratio = minWidth / rW;
+        rW = minWidth;
+        rH = rH * ratio;
     }
-
-    canvas.width = renderWidth;
-    canvas.height = renderHeight;
-    ctx.drawImage(activeImage, 0, 0, renderWidth, renderHeight);
+    canvas.width = rW;
+    canvas.height = rH;
+    ctx.drawImage(activeImage, 0, 0, rW, rH);
 
     const size = parseInt(fontSizeRange.value);
-    
-    // MISE À JOUR : Support Emoji robuste pour le Canvas
     ctx.font = `bold ${size}px Impact, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
-    
     ctx.textAlign = 'center';
     ctx.fillStyle = 'white';
     ctx.strokeStyle = 'black';
@@ -115,46 +127,24 @@ function drawMeme() {
 
     ctx.textBaseline = 'top';
     wrapText(ctx, topText.value.toUpperCase(), canvas.width / 2, 30, maxWidth, lineHeight, false);
-
     ctx.textBaseline = 'bottom';
     wrapText(ctx, bottomText.value.toUpperCase(), canvas.width / 2, canvas.height - 30, maxWidth, lineHeight, true);
 }
 
+// --- ÉVÉNEMENTS & BOUTONS ---
 [topText, bottomText, fontSizeRange].forEach(el => {
     el.addEventListener('input', () => { if(activeImage) drawMeme(); });
 });
 
-// TÉLÉCHARGEMENT OPTIMISÉ (JPG RESTE JPG)
 downloadBtn.addEventListener('click', () => {
-    if(!activeImage) return alert("Choisissez d'abord une image !");
-    
+    if(!activeImage) return alert("Choisissez une image !");
     const link = document.createElement('a');
-    
-    // Déterminer l'extension pour le nom du fichier
-    const extension = (fileType === 'image/jpeg' || fileType === 'image/jpg') ? 'jpg' : 'png';
-    link.download = `meme_supinfo.${extension}`;
-    
-    // On exporte avec le type d'origine
+    const ext = (fileType === 'image/jpeg' || fileType === 'image/jpg') ? 'jpg' : 'png';
+    link.download = `meme_supinfo.${ext}`;
     link.href = canvas.toDataURL(fileType, 0.9);
     link.click();
 });
 
-// Partage
-shareBtn.addEventListener('click', async () => {
-    if(!activeImage) return;
-    try {
-        const dataUrl = canvas.toDataURL(fileType);
-        const blob = await (await fetch(dataUrl)).blob();
-        const file = new File([blob], 'meme.png', { type: fileType });
-        if (navigator.share && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file] });
-        } else {
-            alert("Partage non disponible.");
-        }
-    } catch (e) { console.log("Partage annulé"); }
-});
-
-// Galerie
 saveBtn.addEventListener('click', () => {
     if(!activeImage) return;
     const saved = JSON.parse(localStorage.getItem('supinfoMemes') || '[]');
@@ -176,7 +166,7 @@ function displayGallery() {
 }
 
 document.getElementById('clearGallery').addEventListener('click', () => {
-    if(confirm("Effacer toute la galerie ?")) {
+    if(confirm("Effacer la galerie ?")) {
         localStorage.removeItem('supinfoMemes');
         displayGallery();
     }
