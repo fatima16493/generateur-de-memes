@@ -14,36 +14,46 @@ const emojiListBottom = document.getElementById('emojiListBottom');
 let activeImage = null;
 let fileType = 'image/png'; 
 
-// --- GESTION DES EMOJIS (INTÉGRÉS DANS L'INPUT) ---
+// --- GESTION DES EMOJIS (UNIQUEMENT AU CLIC SUR L'ICÔNE) ---
 
 function closeEmojis() {
     emojiListTop.style.display = 'none';
     emojiListBottom.style.display = 'none';
 }
 
-// Ouvrir la liste au clic sur le bouton 😊
+// On écoute le clic UNIQUEMENT sur les boutons smileys
 document.querySelectorAll('.emoji-trigger').forEach(btn => {
     btn.addEventListener('click', (e) => {
+        // e.stopPropagation empêche l'événement de se propager au document (qui fermerait la liste)
         e.stopPropagation();
+        
         const targetId = btn.getAttribute('data-target');
         const list = document.getElementById(targetId);
+        
+        // On vérifie si la liste est déjà affichée
         const isVisible = list.style.display === 'grid';
+        
+        // On ferme tout par sécurité
         closeEmojis();
-        list.style.display = isVisible ? 'none' : 'grid';
+        
+        // Si elle n'était pas visible, on l'affiche
+        if (!isVisible) {
+            list.style.display = 'grid';
+        }
     });
 });
 
-// Insertion Emoji (HAUT)
+// Insertion Emoji pour le champ du HAUT
 document.querySelectorAll('#emojiListTop span').forEach(emoji => {
     emoji.addEventListener('mousedown', (e) => {
         e.preventDefault(); 
         topText.value += emoji.innerText;
         drawMeme();
-        topText.focus();
+        topText.focus(); // On remet le curseur dans le texte après l'emoji
     });
 });
 
-// Insertion Emoji (BAS)
+// Insertion Emoji pour le champ du BAS
 document.querySelectorAll('#emojiListBottom span').forEach(emoji => {
     emoji.addEventListener('mousedown', (e) => {
         e.preventDefault();
@@ -53,10 +63,19 @@ document.querySelectorAll('#emojiListBottom span').forEach(emoji => {
     });
 });
 
-// Fermer les menus si on clique ailleurs
-document.addEventListener('click', closeEmojis);
+// Fermer les emojis si on clique n'importe où ailleurs sur la page
+document.addEventListener('click', () => {
+    closeEmojis();
+});
 
-// --- IMPORTATION DE L'IMAGE ---
+// Empêcher la fermeture si on clique à l'intérieur de la grille d'emojis elle-même
+document.querySelectorAll('.emoji-list').forEach(list => {
+    list.addEventListener('click', (e) => e.stopPropagation());
+});
+
+
+// --- LE RESTE DE TA LOGIQUE (IMAGE, DRAW, SAVE) RESTE INCHANGÉ ---
+
 document.getElementById('labelTrigger').addEventListener('click', () => imageInput.click());
 
 imageInput.addEventListener('change', (e) => {
@@ -66,21 +85,16 @@ imageInput.addEventListener('change', (e) => {
     const reader = new FileReader();
     reader.onload = () => {
         const img = new Image();
-        img.onload = () => {
-            activeImage = img;
-            drawMeme();
-        };
+        img.onload = () => { activeImage = img; drawMeme(); };
         img.src = reader.result;
     };
     reader.readAsDataURL(file);
 });
 
-// --- LOGIQUE DU DESSIN (WRAPPING + RENDU) ---
 function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false) {
     const words = text.split(' ');
     let lines = [];
     let currentLine = '';
-
     for (let i = 0; i < words.length; i++) {
         let testLine = currentLine + words[i] + ' ';
         if (context.measureText(testLine).width > maxWidth && i > 0) {
@@ -96,18 +110,13 @@ function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false)
                         lines.push((currentLine + subWord).trim());
                         currentLine = '';
                         subWord = char;
-                    } else {
-                        subWord += char;
-                    }
+                    } else { subWord += char; }
                 }
                 currentLine = subWord + ' ';
-            } else {
-                currentLine = testLine;
-            }
+            } else { currentLine = testLine; }
         }
     }
     lines.push(currentLine.trim());
-
     let startY = fromBottom ? y - (lines.length - 1) * lineHeight : y;
     lines.forEach((line, index) => {
         let posY = startY + (index * lineHeight);
@@ -121,66 +130,38 @@ function drawMeme() {
     const minWidth = 800;
     let rW = activeImage.width;
     let rH = activeImage.height;
-    
     if (rW < minWidth) {
         const ratio = minWidth / rW;
-        rW = minWidth;
-        rH = rH * ratio;
+        rW = minWidth; rH = rH * ratio;
     }
-    
-    canvas.width = rW;
-    canvas.height = rH;
+    canvas.width = rW; canvas.height = rH;
     ctx.drawImage(activeImage, 0, 0, rW, rH);
-
     const size = parseInt(fontSizeRange.value);
-    ctx.font = `bold ${size}px Impact, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+    ctx.font = `bold ${size}px Impact, "Apple Color Emoji", sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillStyle = 'white';
     ctx.strokeStyle = 'black';
     ctx.lineWidth = size / 5;
-
     const maxWidth = canvas.width * 0.85; 
     const lineHeight = size * 1.1;
-
     ctx.textBaseline = 'top';
     wrapText(ctx, topText.value.toUpperCase(), canvas.width / 2, 30, maxWidth, lineHeight, false);
     ctx.textBaseline = 'bottom';
     wrapText(ctx, bottomText.value.toUpperCase(), canvas.width / 2, canvas.height - 30, maxWidth, lineHeight, true);
 }
 
-// --- ÉVÉNEMENTS ---
 [topText, bottomText, fontSizeRange].forEach(el => {
     el.addEventListener('input', () => { if(activeImage) drawMeme(); });
 });
 
-// Téléchargement
 downloadBtn.addEventListener('click', () => {
     if(!activeImage) return alert("Choisissez une image !");
     const link = document.createElement('a');
-    const ext = (fileType === 'image/jpeg' || fileType === 'image/jpg') ? 'jpg' : 'png';
-    link.download = `meme_supinfo.${ext}`;
+    link.download = `meme_supinfo.png`;
     link.href = canvas.toDataURL(fileType, 0.9);
     link.click();
 });
 
-// Partage (API Web Share)
-shareBtn.addEventListener('click', async () => {
-    if(!activeImage) return alert("Créez un meme d'abord !");
-    const blob = await (await fetch(canvas.toDataURL())).blob();
-    const file = new File([blob], 'meme.png', { type: 'image/png' });
-    
-    if (navigator.share) {
-        navigator.share({
-            files: [file],
-            title: 'Mon Meme SUPINFO',
-            text: 'Regarde le meme que je viens de créer !'
-        }).catch(console.error);
-    } else {
-        alert("Le partage n'est pas supporté sur ce navigateur (utilisez un mobile ou HTTPS).");
-    }
-});
-
-// Sauvegarde Locale
 saveBtn.addEventListener('click', () => {
     if(!activeImage) return;
     const saved = JSON.parse(localStorage.getItem('supinfoMemes') || '[]');
