@@ -71,7 +71,7 @@ h1 {
 
 .control-section {
     border-bottom: 1px solid rgba(255,255,255,0.05);
-    padding-bottom: 20px; /* Augmenté pour plus d'air */
+    padding-bottom: 20px;
 }
 
 .control-section h3 {
@@ -132,7 +132,7 @@ h1 {
 .input-wrapper {
     display: flex;
     gap: 8px;
-    margin-bottom: 20px; /* Plus d'espace sous le champ texte */
+    margin-bottom: 20px;
 }
 
 input[type="text"] {
@@ -157,37 +157,37 @@ input[type="text"]:focus {
     padding: 0 20px;
     border-radius: 8px;
     font-weight: bold;
+    cursor: pointer;
 }
 
-.emoji-selector {
-    margin-bottom: 25px; /* Espace pour descendre la zone émojis */
-}
-
+/* --- MISE EN FORME ÉMOTIONS (MIROIR POLICE) --- */
 .emoji-row {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-    background: rgba(0,0,0,0.2);
+    background: var(--input-bg); /* Identique au sélecteur Police */
     padding: 12px;
     border-radius: 8px;
-    justify-content: center;
+    border: 1px solid rgba(255,255,255,0.1);
+    justify-content: space-around;
 }
 
 .emoji-item {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
     cursor: pointer;
-    transition: 0.2s transform;
+    transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .emoji-item:hover { 
     transform: scale(1.4); 
+    filter: drop-shadow(0 0 8px var(--accent));
 }
 
 /* --- STYLES ET SLIDERS --- */
 .style-row {
     display: flex;
     gap: 15px;
-    margin-bottom: 20px; /* Espace avant la police */
+    margin-bottom: 20px;
 }
 
 .style-item { flex: 1; }
@@ -213,18 +213,6 @@ input[type="range"] {
     cursor: pointer;
 }
 
-.font-control {
-    margin-top: 10px;
-    padding-top: 5px;
-}
-
-.font-control label {
-    display: block;
-    font-size: 0.75rem;
-    margin-bottom: 8px;
-    color: #94a3b8;
-}
-
 select {
     width: 100%;
     background: var(--input-bg);
@@ -234,6 +222,11 @@ select {
     border: 1px solid rgba(255,255,255,0.1);
     cursor: pointer;
     outline: none;
+    transition: 0.3s;
+}
+
+select:focus {
+    border-color: var(--accent);
 }
 
 /* --- BOUTONS --- */
@@ -257,7 +250,7 @@ select {
     display: flex; 
     flex-direction: column; 
     gap: 10px; 
-    margin-top: 20px; /* Plus d'espace avant les boutons d'action */
+    margin-top: 20px;
 }
 
 button {
@@ -280,7 +273,7 @@ button:hover {
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
-/* --- ZONE DE PREVIEW (CANVAS) --- */
+/* --- ZONE DE PREVIEW --- */
 .preview-area {
     background: #000;
     background-image: radial-gradient(circle, #1e293b 1px, transparent 1px);
