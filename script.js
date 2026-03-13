@@ -6,6 +6,7 @@ const bottomText = document.getElementById('bottomText');
 const fontSizeRange = document.getElementById('fontSizeRange');
 const fontSelect = document.getElementById('fontSelect');
 const downloadBtn = document.getElementById('downloadBtn');
+const shareBtn = document.getElementById('shareBtn');
 const saveBtn = document.getElementById('saveBtn');
 const galleryContainer = document.getElementById('galleryContainer');
 const emojiListTop = document.getElementById('emojiListTop');
@@ -60,8 +61,7 @@ imageInput.addEventListener('change', (e) => {
         const img = new Image();
         img.onload = () => { 
             activeImage = img;
-            // Réinitialiser les positions pour forcer le placement par défaut au prochain draw
-            topPos.y = 0; 
+            topPos.y = 0; // Force le repositionnement par défaut
             drawMeme(); 
         };
         img.src = reader.result;
@@ -85,7 +85,6 @@ canvas.addEventListener('mousedown', (e) => {
     const pos = getMousePos(e);
     const size = parseInt(fontSizeRange.value);
 
-    // Détection de zone (clic sur le texte)
     if (Math.abs(pos.y - topPos.y) < size) {
         topPos.isDragging = true;
     } else if (Math.abs(pos.y - bottomPos.y) < size) {
@@ -141,7 +140,6 @@ function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false)
 function drawMeme() {
     if (!activeImage) return;
 
-    // Mise à l'échelle du canvas
     const minWidth = 800;
     let rW = activeImage.width;
     let rH = activeImage.height;
@@ -155,13 +153,12 @@ function drawMeme() {
     const size = parseInt(fontSizeRange.value);
     const font = fontSelect.value;
     
-    // Positions par défaut (uniquement au premier chargement de l'image)
     if (topPos.y === 0) {
         topPos = { x: canvas.width / 2, y: size + 20, isDragging: false };
         bottomPos = { x: canvas.width / 2, y: canvas.height - size, isDragging: false };
     }
 
-    // Application de la police (avec guillemets pour les noms composés)
+    // Correction Police : Ajout des guillemets pour les noms composés
     ctx.font = `bold ${size}px "${font}", Impact, sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillStyle = 'white';
@@ -176,23 +173,49 @@ function drawMeme() {
     wrapText(ctx, bottomText.value.toUpperCase(), bottomPos.x, bottomPos.y, maxWidth, lineHeight, true);
 }
 
-// --- ÉVÉNEMENTS DE MISE À JOUR ---
+// --- ÉVÉNEMENTS ---
 [topText, bottomText, fontSizeRange].forEach(el => {
     el.addEventListener('input', () => { if(activeImage) drawMeme(); });
 });
 
-// Événement spécifique pour le changement de police
 fontSelect.addEventListener('change', () => {
     if(activeImage) drawMeme();
 });
 
-// --- BOUTONS ---
+// --- BOUTONS (TELECHARGEMENT & PARTAGE) ---
 downloadBtn.addEventListener('click', () => {
     if(!activeImage) return alert("Choisissez une image !");
     const link = document.createElement('a');
     link.download = `meme_supinfo.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
+});
+
+shareBtn.addEventListener('click', async () => {
+    if (!activeImage) return alert("Créez un mème d'abord !");
+    try {
+        const dataUrl = canvas.toDataURL("image/png");
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], 'meme_supinfo.png', { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                files: [file],
+                title: 'Mon Mème SUPINFO',
+                text: 'Regarde ma création !'
+            });
+        } else if (navigator.share) {
+            await navigator.share({
+                title: 'Mon Mème SUPINFO',
+                url: window.location.href
+            });
+        } else {
+            alert("Partage non supporté ici. Téléchargez l'image !");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Erreur de partage (nécessite HTTPS sur certains navigateurs).");
+    }
 });
 
 saveBtn.addEventListener('click', () => {
