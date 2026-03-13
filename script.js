@@ -10,13 +10,19 @@ const saveBtn = document.getElementById('saveBtn');
 const galleryContainer = document.getElementById('galleryContainer');
 
 let activeImage = null;
+let fileType = 'image/png'; // Variable pour stocker le format d'origine
 
 // Déclencheur pour le bouton de fichier
 document.getElementById('labelTrigger').addEventListener('click', () => imageInput.click());
 
 // Gestion de l'importation de l'image
 imageInput.addEventListener('change', (e) => {
-    if (!e.target.files[0]) return;
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // ON DÉTECTE ET ON GARDE LE FORMAT D'ORIGINE
+    fileType = file.type;
+
     const reader = new FileReader();
     reader.onload = () => {
         const img = new Image();
@@ -26,12 +32,11 @@ imageInput.addEventListener('change', (e) => {
         };
         img.src = reader.result;
     };
-    reader.readAsDataURL(e.target.files[0]);
+    reader.readAsDataURL(file);
 });
 
 /**
  * Fonction de retour à la ligne avancée (Mots + Lettres)
- * Cette version empêche tout débordement, même sans espaces.
  */
 function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false) {
     const words = text.split(' ');
@@ -46,7 +51,6 @@ function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false)
             lines.push(currentLine.trim());
             currentLine = words[i] + ' ';
         } else {
-            // SÉCURITÉ : Si le mot seul est trop long pour l'image
             let wordMetrics = context.measureText(words[i]);
             if (wordMetrics.width > maxWidth) {
                 let chars = words[i].split('');
@@ -69,7 +73,6 @@ function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false)
     }
     lines.push(currentLine.trim());
 
-    // Calcul de la position verticale (remonte pour le texte du bas)
     let startY = fromBottom ? y - (lines.length - 1) * lineHeight : y;
 
     lines.forEach((line, index) => {
@@ -79,13 +82,9 @@ function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false)
     });
 }
 
-/**
- * Fonction principale de dessin
- */
 function drawMeme() {
     if (!activeImage) return;
 
-    // Gestion de la taille minimale (800px) pour la qualité et l'espace texte
     const minWidth = 800;
     let renderWidth = activeImage.width;
     let renderHeight = activeImage.height;
@@ -100,7 +99,6 @@ function drawMeme() {
     canvas.height = renderHeight;
     ctx.drawImage(activeImage, 0, 0, renderWidth, renderHeight);
 
-    // Style du texte
     const size = parseInt(fontSizeRange.value);
     ctx.font = `bold ${size}px Impact, sans-serif`;
     ctx.textAlign = 'center';
@@ -111,26 +109,29 @@ function drawMeme() {
     const maxWidth = canvas.width * 0.85; 
     const lineHeight = size * 1.1;
 
-    // Texte Haut
     ctx.textBaseline = 'top';
     wrapText(ctx, topText.value.toUpperCase(), canvas.width / 2, 30, maxWidth, lineHeight, false);
 
-    // Texte Bas
     ctx.textBaseline = 'bottom';
     wrapText(ctx, bottomText.value.toUpperCase(), canvas.width / 2, canvas.height - 30, maxWidth, lineHeight, true);
 }
 
-// Mise à jour instantanée lors de la saisie
 [topText, bottomText, fontSizeRange].forEach(el => {
     el.addEventListener('input', () => { if(activeImage) drawMeme(); });
 });
 
-// Téléchargement
+// TÉLÉCHARGEMENT OPTIMISÉ (JPG RESTE JPG)
 downloadBtn.addEventListener('click', () => {
     if(!activeImage) return alert("Choisissez d'abord une image !");
+    
     const link = document.createElement('a');
-    link.download = 'meme_supinfo.png';
-    link.href = canvas.toDataURL();
+    
+    // Déterminer l'extension pour le nom du fichier
+    const extension = (fileType === 'image/jpeg' || fileType === 'image/jpg') ? 'jpg' : 'png';
+    link.download = `meme_supinfo.${extension}`;
+    
+    // On exporte avec le type d'origine (et une qualité de 0.9 pour le JPEG)
+    link.href = canvas.toDataURL(fileType, 0.9);
     link.click();
 });
 
@@ -138,12 +139,13 @@ downloadBtn.addEventListener('click', () => {
 shareBtn.addEventListener('click', async () => {
     if(!activeImage) return;
     try {
-        const blob = await (await fetch(canvas.toDataURL())).blob();
-        const file = new File([blob], 'meme.png', { type: 'image/png' });
+        const dataUrl = canvas.toDataURL(fileType);
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], 'meme.png', { type: fileType });
         if (navigator.share && navigator.canShare({ files: [file] })) {
             await navigator.share({ files: [file] });
         } else {
-            alert("Partage non disponible. Utilisez le téléchargement.");
+            alert("Partage non disponible.");
         }
     } catch (e) { console.log("Partage annulé"); }
 });
@@ -152,7 +154,8 @@ shareBtn.addEventListener('click', async () => {
 saveBtn.addEventListener('click', () => {
     if(!activeImage) return;
     const saved = JSON.parse(localStorage.getItem('supinfoMemes') || '[]');
-    saved.unshift(canvas.toDataURL());
+    // Sauvegarde dans le format d'origine
+    saved.unshift(canvas.toDataURL(fileType));
     if(saved.length > 12) saved.pop();
     localStorage.setItem('supinfoMemes', JSON.stringify(saved));
     displayGallery();
