@@ -55,6 +55,28 @@ h1 {
     height: fit-content;
 }
 
+/* NOUVEAU : Style pour le groupe de taille de texte */
+.size-control {
+    margin: 5px 0;
+    padding: 10px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+}
+
+.size-control label {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+/* Style du Slider (Curseur) */
+input[type="range"] {
+    width: 100%;
+    cursor: pointer;
+    accent-color: var(--accent); /* Donne la couleur indigo au curseur */
+}
+
 input[type="text"] {
     background: #334155;
     border: 2px solid transparent;
@@ -103,11 +125,18 @@ button:hover { transform: translateY(-2px); opacity: 0.9; }
     border-radius: 16px;
     display: flex;
     justify-content: center;
+    align-items: center; /* Centrer le canvas */
     min-height: 450px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    overflow: hidden;
 }
 
-canvas { max-width: 100%; height: auto; display: block; }
+canvas { 
+    max-width: 100%; 
+    height: auto; 
+    display: block; 
+    border-radius: 4px;
+}
 
 .gallery-section { width: 100%; max-width: 1100px; }
 .gallery-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); margin-bottom: 25px; padding-bottom: 10px; }
@@ -124,6 +153,9 @@ canvas { max-width: 100%; height: auto; display: block; }
     overflow: hidden;
     background: var(--card);
     border: 1px solid rgba(255,255,255,0.1);
+    transition: 0.3s;
 }
+
+.gallery-item:hover { transform: scale(1.05); } /* Petit effet sympa au survol */
 
 .gallery-item img { width: 100%; display: block; }
