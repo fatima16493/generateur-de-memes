@@ -71,13 +71,13 @@ h1 {
 
 .control-section {
     border-bottom: 1px solid rgba(255,255,255,0.05);
-    padding-bottom: 15px;
+    padding-bottom: 20px; /* Augmenté pour plus d'air */
 }
 
 .control-section h3 {
     font-size: 0.85rem;
     color: var(--accent-bright);
-    margin-bottom: 12px;
+    margin-bottom: 15px;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
@@ -132,7 +132,7 @@ h1 {
 .input-wrapper {
     display: flex;
     gap: 8px;
-    margin-bottom: 15px;
+    margin-bottom: 20px; /* Plus d'espace sous le champ texte */
 }
 
 input[type="text"] {
@@ -159,6 +159,10 @@ input[type="text"]:focus {
     font-weight: bold;
 }
 
+.emoji-selector {
+    margin-bottom: 25px; /* Espace pour descendre la zone émojis */
+}
+
 .emoji-row {
     display: flex;
     flex-wrap: wrap;
@@ -183,7 +187,7 @@ input[type="text"]:focus {
 .style-row {
     display: flex;
     gap: 15px;
-    margin-top: 15px;
+    margin-bottom: 20px; /* Espace avant la police */
 }
 
 .style-item { flex: 1; }
@@ -207,6 +211,18 @@ input[type="range"] {
     width: 100%;
     accent-color: var(--accent);
     cursor: pointer;
+}
+
+.font-control {
+    margin-top: 10px;
+    padding-top: 5px;
+}
+
+.font-control label {
+    display: block;
+    font-size: 0.75rem;
+    margin-bottom: 8px;
+    color: #94a3b8;
 }
 
 select {
@@ -241,7 +257,7 @@ select {
     display: flex; 
     flex-direction: column; 
     gap: 10px; 
-    margin-top: 10px;
+    margin-top: 20px; /* Plus d'espace avant les boutons d'action */
 }
 
 button {
@@ -256,7 +272,7 @@ button {
 .primary-btn { background: var(--accent); color: white; }
 .share-btn { background: var(--success); color: white; }
 .secondary-btn { background: #475569; color: white; }
-.delete-btn { background: var(--danger); color: white; margin-top: 10px; width: 100%; }
+.delete-btn { background: var(--danger); color: white; margin-top: 15px; width: 100%; }
 
 button:hover { 
     transform: translateY(-2px); 
@@ -344,5 +360,5 @@ canvas {
     color: #94a3b8;
     text-align: center;
     font-style: italic;
-    margin-top: 10px;
+    margin-top: 15px;
 }
