@@ -32,10 +32,26 @@
                 </div>
             </div>
             
-            <div class="size-control">
-                <label>Taille du texte :</label>
-                <input type="range" id="fontSizeRange" min="20" max="150" value="60">
+            <div class="style-controls">
+                <div class="size-control">
+                    <label>Taille du texte :</label>
+                    <input type="range" id="fontSizeRange" min="20" max="150" value="60">
+                </div>
+
+                <div class="font-control">
+                    <label>Police d'écriture :</label>
+                    <select id="fontSelect">
+                        <option value="Impact" selected>Impact (Meme)</option>
+                        <option value="Arial">Arial</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Courier New">Courier New</option>
+                    </select>
+                </div>
             </div>
+
+            <p class="hint">💡 Astuce : Faites glisser le texte sur l'image pour le déplacer !</p>
             
             <div class="button-group">
                 <button id="downloadBtn" class="primary-btn">Télécharger</button>
@@ -59,4 +75,4 @@
 
     <script src="script.js"></script>
 </body>
-</html>ss
+</html>
