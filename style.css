@@ -2,20 +2,14 @@
 
 :root {
     --accent: #6366f1;
-    --accent-bright: #818cf8;
     --bg: #0f172a;
     --card: #1e293b;
     --text: #f8fafc;
-    --success: #22c55e;
-    --danger: #ef4444;
     --input-bg: #334155;
+    --danger: #ef4444;
 }
 
-* { 
-    box-sizing: border-box; 
-    margin: 0; 
-    padding: 0; 
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
     font-family: 'Inter', sans-serif;
@@ -25,7 +19,6 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100vh;
 }
 
 h1 {
@@ -36,50 +29,63 @@ h1 {
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    text-align: center;
 }
 
-/* --- STRUCTURE PRINCIPALE --- */
 .main-container {
     display: grid;
     grid-template-columns: 350px 1fr;
     gap: 30px;
     max-width: 1100px;
     width: 100%;
-    margin-bottom: 60px;
-}
-
-@media (max-width: 850px) { 
-    .main-container { grid-template-columns: 1fr; } 
-    h1 { font-size: 2.2rem; }
 }
 
 .controls {
     background: var(--card);
     padding: 25px;
     border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.1);
     display: flex;
     flex-direction: column;
     gap: 15px;
-    height: fit-content;
 }
 
-/* --- SYSTÈME EMOJI "CLAVIER" --- */
+/* --- LE STYLE EMOJI DANS L'INPUT --- */
 .input-wrapper {
-    position: relative; /* Indispensable pour placer la liste par rapport à l'input */
+    position: relative;
     width: 100%;
+}
+
+.input-wrapper input[type="text"] {
+    background: var(--input-bg);
+    border: 2px solid transparent;
+    padding: 12px 45px 12px 12px; /* Espace pour le smiley à droite */
+    border-radius: 8px;
+    color: white;
+    width: 100%;
+    outline: none;
+    font-size: 1rem;
+}
+
+.emoji-trigger {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    opacity: 0.6;
 }
 
 .emoji-list {
     position: absolute;
-    top: calc(100% + 5px); /* Juste en dessous de l'input */
-    left: 0;
-    width: 100%;
-    background: #1e293b;
+    top: calc(100% + 5px);
+    right: 0;
+    width: 200px;
+    background: var(--card);
     border: 1px solid var(--accent);
     border-radius: 12px;
-    padding: 12px;
+    padding: 10px;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
@@ -88,161 +94,24 @@ h1 {
 }
 
 .emoji-list span {
-    font-size: 1.5rem;
     cursor: pointer;
+    font-size: 1.4rem;
     text-align: center;
-    padding: 5px;
-    border-radius: 6px;
     transition: 0.2s;
 }
 
-.emoji-list span:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: scale(1.2);
-}
+.emoji-list span:hover { transform: scale(1.2); }
 
-/* --- INPUTS ET SLIDERS --- */
-input[type="text"] {
-    background: var(--input-bg);
-    border: 2px solid transparent;
-    padding: 12px;
-    border-radius: 8px;
-    color: white;
-    outline: none;
-    transition: 0.3s;
-    font-size: 1rem;
-    width: 100%;
-}
-
-input[type="text"]:focus { 
-    border-color: var(--accent);
-    background: #1e293b;
-}
-
-.size-control {
-    background: rgba(0, 0, 0, 0.2);
-    padding: 15px;
-    border-radius: 8px;
-}
-
-.size-control label {
-    display: block;
-    font-size: 0.85rem;
-    font-weight: 700;
-    margin-bottom: 10px;
-    color: #94a3b8;
-}
-
-input[type="range"] {
-    width: 100%;
-    accent-color: var(--accent);
-    cursor: pointer;
-}
-
-/* --- BOUTONS --- */
-.file-label {
-    background: var(--accent);
-    padding: 15px;
-    text-align: center;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 700;
-    transition: 0.2s;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-}
-
-.button-group { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 10px; 
-    margin-top: 10px;
-}
-
-button {
-    padding: 14px;
-    border-radius: 8px;
-    border: none;
-    font-weight: 700;
-    cursor: pointer;
-    transition: 0.2s;
-    text-transform: uppercase;
-}
-
+/* --- AUTRES STYLES --- */
+.file-label { background: var(--accent); padding: 15px; text-align: center; border-radius: 8px; cursor: pointer; font-weight: 700; }
+.button-group { display: flex; flex-direction: column; gap: 10px; }
+button { padding: 14px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; text-transform: uppercase; }
 .primary-btn { background: #334155; color: white; }
-.share-btn { background: var(--success); color: white; }
 .secondary-btn { background: #475569; color: white; }
-.clear-btn { 
-    background: transparent; 
-    color: var(--danger); 
-    border: 1px solid var(--danger); 
-    padding: 5px 12px; 
-    text-transform: none; 
-}
 
-button:hover { 
-    transform: translateY(-2px); 
-    filter: brightness(1.1);
-}
+.preview-area { background: #000; border-radius: 16px; padding: 20px; display: flex; justify-content: center; min-height: 500px; }
+canvas { max-width: 100%; height: auto; border-radius: 8px; }
 
-/* --- ZONE PREVIEW / CANVAS --- */
-.preview-area {
-    background: #000;
-    border-radius: 16px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 550px;
-    width: 100%;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-    border: 1px solid rgba(255,255,255,0.05);
-    padding: 20px;
-    overflow: hidden;
-}
-
-canvas { 
-    max-width: 100%;
-    max-height: 750px;
-    height: auto; 
-    display: block; 
-    border-radius: 8px;
-}
-
-/* --- GALERIE --- */
-.gallery-section { 
-    width: 100%; 
-    max-width: 1100px; 
-    margin-top: 40px;
-}
-
-.gallery-header { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    border-bottom: 2px solid var(--accent); 
-    margin-bottom: 25px; 
-    padding-bottom: 10px; 
-}
-
-.gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-}
-
-.gallery-item {
-    border-radius: 12px;
-    overflow: hidden;
-    background: var(--card);
-    border: 1px solid rgba(255,255,255,0.1);
-    transition: 0.3s;
-}
-
-.gallery-item:hover {
-    transform: translateY(-5px);
-    border-color: var(--accent);
-}
-
-.gallery-item img { 
-    width: 100%; 
-    display: block; 
-}
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-top: 20px; }
+.gallery-item img { width: 100%; border-radius: 8px; }
+.clear-btn { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 5px 10px; }
