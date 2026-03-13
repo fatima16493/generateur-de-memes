@@ -27,6 +27,7 @@ imageInput.addEventListener('change', (e) => {
     reader.readAsDataURL(e.target.files[0]);
 });
 
+// FONCTION DE RETOUR À LA LIGNE AMÉLIORÉE
 function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false) {
     const words = text.split(' ');
     let line = '';
@@ -35,25 +36,32 @@ function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false)
     for (let n = 0; n < words.length; n++) {
         let testLine = line + words[n] + ' ';
         let metrics = context.measureText(testLine);
+        
+        // Si le mot seul est plus large que l'image, on force la coupure
         if (metrics.width > maxWidth && n > 0) {
-            lines.push(line);
+            lines.push(line.trim());
             line = words[n] + ' ';
         } else {
             line = testLine;
         }
     }
-    lines.push(line);
+    lines.push(line.trim());
+
+    // Calcul de la position de départ pour le texte du bas
+    let totalHeight = lines.length * lineHeight;
+    let startY = fromBottom ? y - (lines.length - 1) * lineHeight : y;
 
     lines.forEach((l, index) => {
-        let posY = fromBottom ? y - (lines.length - 1 - index) * lineHeight : y + index * lineHeight;
-        context.strokeText(l.trim(), x, posY);
-        context.fillText(l.trim(), x, posY);
+        let posY = startY + (index * lineHeight);
+        context.strokeText(l, x, posY);
+        context.fillText(l, x, posY);
     });
 }
 
 function drawMeme() {
     if (!activeImage) return;
 
+    // On garde la taille réelle de l'image
     canvas.width = activeImage.width;
     canvas.height = activeImage.height;
     ctx.drawImage(activeImage, 0, 0);
@@ -65,18 +73,27 @@ function drawMeme() {
     ctx.strokeStyle = 'black';
     ctx.lineWidth = size / 6;
 
+    // On définit la zone de texte à 90% de la largeur de l'image
     const maxWidth = canvas.width * 0.9;
     const lineHeight = size * 1.1;
 
+    // Texte Haut
     ctx.textBaseline = 'top';
-    wrapText(ctx, topText.value.toUpperCase(), canvas.width / 2, 20, maxWidth, lineHeight, false);
+    wrapText(ctx, topText.value.toUpperCase(), canvas.width / 2, 30, maxWidth, lineHeight, false);
 
+    // Texte Bas
     ctx.textBaseline = 'bottom';
-    wrapText(ctx, bottomText.value.toUpperCase(), canvas.width / 2, canvas.height - 20, maxWidth, lineHeight, true);
+    wrapText(ctx, bottomText.value.toUpperCase(), canvas.width / 2, canvas.height - 30, maxWidth, lineHeight, true);
 }
 
-[topText, bottomText, fontSizeRange].forEach(el => el.addEventListener('input', drawMeme));
+// Écouteurs d'événements
+[topText, bottomText, fontSizeRange].forEach(el => {
+    el.addEventListener('input', () => {
+        if(activeImage) drawMeme();
+    });
+});
 
+// Téléchargement
 downloadBtn.addEventListener('click', () => {
     if(!activeImage) return alert("Choisissez une image !");
     const link = document.createElement('a');
@@ -85,19 +102,22 @@ downloadBtn.addEventListener('click', () => {
     link.click();
 });
 
+// Partage
 shareBtn.addEventListener('click', async () => {
     if(!activeImage) return;
     try {
-        const blob = await (await fetch(canvas.toDataURL())).blob();
+        const dataUrl = canvas.toDataURL();
+        const blob = await (await fetch(dataUrl)).blob();
         const file = new File([blob], 'meme.png', { type: 'image/png' });
         if (navigator.share && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file] });
+            await navigator.share({ files: [file], title: 'Mon Mème' });
         } else {
-            alert("Partage non supporté. Téléchargez l'image.");
+            alert("Partage non supporté sur ce navigateur.");
         }
-    } catch (err) { console.log(err); }
+    } catch (err) { console.log("Partage annulé"); }
 });
 
+// Galerie
 saveBtn.addEventListener('click', () => {
     if(!activeImage) return;
     const saved = JSON.parse(localStorage.getItem('supinfoMemes') || '[]');
