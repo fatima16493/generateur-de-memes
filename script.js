@@ -11,10 +11,10 @@ const galleryContainer = document.getElementById('galleryContainer');
 
 let activeImage = null;
 
-// Déclenche l'explorateur de fichiers
+// Déclencheur pour le bouton de fichier
 document.getElementById('labelTrigger').addEventListener('click', () => imageInput.click());
 
-// Chargement de l'image sélectionnée
+// Gestion de l'importation de l'image
 imageInput.addEventListener('change', (e) => {
     if (!e.target.files[0]) return;
     const reader = new FileReader();
@@ -30,7 +30,8 @@ imageInput.addEventListener('change', (e) => {
 });
 
 /**
- * Fonction pour gérer le retour à la ligne automatique (Wrapping)
+ * Fonction de retour à la ligne avancée (Mots + Lettres)
+ * Cette version empêche tout débordement, même sans espaces.
  */
 function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false) {
     const words = text.split(' ');
@@ -45,12 +46,30 @@ function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false)
             lines.push(currentLine.trim());
             currentLine = words[i] + ' ';
         } else {
-            currentLine = testLine;
+            // SÉCURITÉ : Si le mot seul est trop long pour l'image
+            let wordMetrics = context.measureText(words[i]);
+            if (wordMetrics.width > maxWidth) {
+                let chars = words[i].split('');
+                let subWord = '';
+                for (let j = 0; j < chars.length; j++) {
+                    let testCharLine = currentLine + subWord + chars[j];
+                    if (context.measureText(testCharLine).width > maxWidth) {
+                        lines.push((currentLine + subWord).trim());
+                        currentLine = '';
+                        subWord = chars[j];
+                    } else {
+                        subWord += chars[j];
+                    }
+                }
+                currentLine = subWord + ' ';
+            } else {
+                currentLine = testLine;
+            }
         }
     }
     lines.push(currentLine.trim());
 
-    // Calcul de la position de départ (pour le texte du bas, on remonte)
+    // Calcul de la position verticale (remonte pour le texte du bas)
     let startY = fromBottom ? y - (lines.length - 1) * lineHeight : y;
 
     lines.forEach((line, index) => {
@@ -61,13 +80,12 @@ function wrapText(context, text, x, y, maxWidth, lineHeight, fromBottom = false)
 }
 
 /**
- * Dessine le mème sur le Canvas
+ * Fonction principale de dessin
  */
 function drawMeme() {
     if (!activeImage) return;
 
-    // --- STRATÉGIE D'AGRANDISSEMENT ---
-    // On force une largeur de 800px minimum pour laisser de la place au texte
+    // Gestion de la taille minimale (800px) pour la qualité et l'espace texte
     const minWidth = 800;
     let renderWidth = activeImage.width;
     let renderHeight = activeImage.height;
@@ -80,67 +98,62 @@ function drawMeme() {
 
     canvas.width = renderWidth;
     canvas.height = renderHeight;
-    
-    // Dessin de l'image sur le canvas (agrandie si nécessaire)
     ctx.drawImage(activeImage, 0, 0, renderWidth, renderHeight);
 
-    // Configuration du style du texte
+    // Style du texte
     const size = parseInt(fontSizeRange.value);
     ctx.font = `bold ${size}px Impact, sans-serif`;
     ctx.textAlign = 'center';
     ctx.fillStyle = 'white';
     ctx.strokeStyle = 'black';
-    ctx.lineWidth = size / 5; // Épaisseur du contour proportionnelle
+    ctx.lineWidth = size / 5;
 
-    const maxWidth = canvas.width * 0.85; // Marge de sécurité
+    const maxWidth = canvas.width * 0.85; 
     const lineHeight = size * 1.1;
 
-    // Texte du Haut
+    // Texte Haut
     ctx.textBaseline = 'top';
     wrapText(ctx, topText.value.toUpperCase(), canvas.width / 2, 30, maxWidth, lineHeight, false);
 
-    // Texte du Bas
+    // Texte Bas
     ctx.textBaseline = 'bottom';
     wrapText(ctx, bottomText.value.toUpperCase(), canvas.width / 2, canvas.height - 30, maxWidth, lineHeight, true);
 }
 
-// Écouteurs pour la mise à jour instantanée
+// Mise à jour instantanée lors de la saisie
 [topText, bottomText, fontSizeRange].forEach(el => {
-    el.addEventListener('input', () => {
-        if (activeImage) drawMeme();
-    });
+    el.addEventListener('input', () => { if(activeImage) drawMeme(); });
 });
 
-// TÉLÉCHARGEMENT
+// Téléchargement
 downloadBtn.addEventListener('click', () => {
-    if(!activeImage) return alert("Sélectionnez d'abord une image.");
+    if(!activeImage) return alert("Choisissez d'abord une image !");
     const link = document.createElement('a');
-    link.download = 'mon-meme.png';
-    link.href = canvas.toDataURL('image/png');
+    link.download = 'meme_supinfo.png';
+    link.href = canvas.toDataURL();
     link.click();
 });
 
-// PARTAGE (Mobile & Navigateurs compatibles)
+// Partage
 shareBtn.addEventListener('click', async () => {
     if(!activeImage) return;
     try {
-        const dataUrl = canvas.toDataURL();
-        const blob = await (await fetch(dataUrl)).blob();
+        const blob = await (await fetch(canvas.toDataURL())).blob();
         const file = new File([blob], 'meme.png', { type: 'image/png' });
         if (navigator.share && navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: 'Mon Mème' });
+            await navigator.share({ files: [file] });
         } else {
-            alert("Partage non supporté. Téléchargez l'image !");
+            alert("Partage non disponible. Utilisez le téléchargement.");
         }
-    } catch (err) { console.log("Partage annulé"); }
+    } catch (e) { console.log("Partage annulé"); }
 });
 
-// GALERIE (LocalStorage)
+// Galerie
 saveBtn.addEventListener('click', () => {
     if(!activeImage) return;
     const saved = JSON.parse(localStorage.getItem('supinfoMemes') || '[]');
     saved.unshift(canvas.toDataURL());
-    if(saved.length > 12) saved.pop(); // Garde les 12 derniers
+    if(saved.length > 12) saved.pop();
     localStorage.setItem('supinfoMemes', JSON.stringify(saved));
     displayGallery();
 });
@@ -157,11 +170,10 @@ function displayGallery() {
 }
 
 document.getElementById('clearGallery').addEventListener('click', () => {
-    if(confirm("Vider la galerie ?")) {
+    if(confirm("Effacer toute la galerie ?")) {
         localStorage.removeItem('supinfoMemes');
         displayGallery();
     }
 });
 
-// Initialisation de la galerie au chargement
 displayGallery();
