@@ -18,7 +18,7 @@
                 <input type="file" id="imageInput" accept="image/jpeg, image/png" style="display: none;">
                 
                 <div class="template-library">
-                    <p>Ou utiliser un modèle (Cloud) :</p>
+                    <p>Ou utiliser un modèle :</p>
                     <div class="template-grid">
                         <img src="https://i.imgflip.com/26am.jpg" class="template-thumb" alt="Boromir">
                         <img src="https://i.imgflip.com/1bij.jpg" class="template-thumb" alt="Fry">
@@ -31,17 +31,18 @@
                 <h3>2. Ambiance du fond</h3>
                 <div class="filter-group">
                     <button type="button" class="filter-btn" data-filter="none">Normal</button>
-                    <button type="button" class="filter-btn" data-filter="grayscale(100%)">Triste (N&B)</button>
-                    <button type="button" class="filter-btn" data-filter="sepia(100%)">Ancien</button>
-                    <button type="button" class="filter-btn" data-filter="brightness(1.5) contrast(1.2)">Joie</button>
-                    <button type="button" class="filter-btn" data-filter="hue-rotate(300deg) saturate(5)">Colère</button>
+                    <button type="button" class="filter-btn" data-filter="grayscale(100%)">Gris</button>
+                    <button type="button" class="filter-btn" data-filter="sepia(100%)">Sépia</button>
+                    <button type="button" class="filter-btn" data-filter="invert(100%)">Négatif</button>
+                    <button type="button" class="filter-btn" data-filter="blur(3px)">Flou</button>
+                    <button type="button" class="filter-btn" data-filter="brightness(1.5) contrast(1.2)">Flash</button>
                 </div>
             </div>
 
             <div class="control-section">
                 <h3>3. Texte & Émotions</h3>
                 <div class="input-wrapper">
-                    <input type="text" id="textInput" placeholder="Tapez votre texte ici..." autocomplete="off">
+                    <input type="text" id="textInput" placeholder="Tapez votre texte..." autocomplete="off">
                     <button type="button" id="addTextBtn" class="add-btn">AJOUTER</button>
                 </div>
 
@@ -76,15 +77,15 @@
                     </select>
                 </div>
 
-                <button id="deleteSelectedBtn" class="delete-btn" style="display:none;">Supprimer l'élément sélectionné</button>
+                <button id="deleteSelectedBtn" class="delete-btn" style="display:none;">Supprimer l'élément</button>
             </div>
 
-            <p class="hint">💡 Astuce : Cliquez sur un texte/emoji pour le déplacer ou le supprimer.</p>
+            <p class="hint">💡 Astuce : Cliquez sur un élément du canevas pour le modifier ou le déplacer.</p>
             
             <div class="button-group">
-                <button id="downloadBtn" class="primary-btn">Télécharger le mème</button>
+                <button id="downloadBtn" class="primary-btn">Télécharger</button>
                 <button id="shareBtn" class="share-btn">Partager</button>
-                <button id="saveBtn" class="secondary-btn">Sauvegarder en Galerie</button>
+                <button id="saveBtn" class="secondary-btn">Sauvegarder</button>
             </div>
         </div>
 
@@ -96,9 +97,9 @@
     <section class="gallery-section">
         <div class="gallery-header">
             <h2>Ma Galerie</h2>
-            <p>Cliquez sur une image pour rééditer le mème</p>
             <button id="clearGallery" class="clear-btn">Effacer tout</button>
         </div>
+        <p class="gallery-hint">Cliquez sur une image pour rééditer le mème</p>
         <div id="galleryContainer" class="gallery-grid"></div>
     </section>
 
